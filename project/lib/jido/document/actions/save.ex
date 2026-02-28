@@ -5,7 +5,7 @@ defmodule Jido.Document.Actions.Save do
 
   @behaviour Jido.Document.Action
 
-  alias Jido.Document.{Document, Error, PathPolicy, Persistence}
+  alias Jido.Document.{Document, Error, PathPolicy, Persistence, Safety}
   alias Jido.Document.Action.Context
 
   @impl true
@@ -16,10 +16,14 @@ defmodule Jido.Document.Actions.Save do
 
   @impl true
   def run(params, %Context{} = context) do
+    safety_opts = effective_safety_opts(params, context)
+
     with {:ok, document} <- fetch_document(params, context),
          {:ok, resolved_path} <- resolve_save_path(params, context, document),
          :ok <- ensure_no_divergence(params, resolved_path),
          {:ok, serialized} <- Document.serialize(document, Map.get(params, :serialize_opts, [])),
+         {:ok, findings} <- scan_sensitive_content(serialized, safety_opts),
+         :ok <- enforce_sensitive_policy(findings, safety_opts),
          {:ok, disk_snapshot} <- write_file_safely(resolved_path, serialized, params),
          :ok <- persist_revision_sidecar(params, resolved_path) do
       {:ok,
@@ -28,7 +32,8 @@ defmodule Jido.Document.Actions.Save do
          path: resolved_path,
          bytes: byte_size(serialized),
          revision: document.revision,
-         disk_snapshot: disk_snapshot
+         disk_snapshot: disk_snapshot,
+         safety: %{findings: findings}
        }}
     end
   end
@@ -137,5 +142,38 @@ defmodule Jido.Document.Actions.Save do
       path: path,
       remediation: [:reload, :overwrite, :merge_hook]
     })
+  end
+
+  defp effective_safety_opts(params, context) do
+    candidate =
+      case Map.fetch(params, :safety) do
+        {:ok, value} ->
+          value
+
+        :error ->
+          Map.get(context.options, :safety, :__unset__)
+      end
+
+    if candidate == :__unset__ do
+      nil
+    else
+      cond do
+        is_map(candidate) -> candidate
+        is_list(candidate) -> Map.new(candidate)
+        true -> %{}
+      end
+    end
+  end
+
+  defp scan_sensitive_content(_content, nil), do: {:ok, []}
+
+  defp scan_sensitive_content(content, safety_opts) do
+    Safety.scan(content, safety_opts)
+  end
+
+  defp enforce_sensitive_policy(_findings, nil), do: :ok
+
+  defp enforce_sensitive_policy(findings, safety_opts) do
+    Safety.enforce_save_policy(findings, safety_opts)
   end
 end

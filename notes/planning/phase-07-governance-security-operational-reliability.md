@@ -58,25 +58,25 @@ Description: Harden the system with policy controls, auditable behavior, and res
    [x] 7.2.2.3 Subtask - Provide trace export helper for incident debugging.  
    Description: Support compact reproducible incident bundles.
 
- [ ] 7.3 Section - Data Safety and Redaction Policy  
+ [x] 7.3 Section - Data Safety and Redaction Policy  
  Description: Reduce exposure risk for sensitive metadata and document content.
 
-  [ ] 7.3.1 Task - Implement sensitive content detection hooks  
+  [x] 7.3.1 Task - Implement sensitive content detection hooks  
   Description: Detect secrets or PII patterns before persistence and preview.
-   [ ] 7.3.1.1 Subtask - Add configurable regex/ruleset scanner.  
+   [x] 7.3.1.1 Subtask - Add configurable regex/ruleset scanner.  
    Description: Support baseline secret and token detection use cases.
-   [ ] 7.3.1.2 Subtask - Annotate findings with severity and location.  
+   [x] 7.3.1.2 Subtask - Annotate findings with severity and location.  
    Description: Enable consumer-level warning presentation.
-   [ ] 7.3.1.3 Subtask - Allow custom detector plugin integration.  
+   [x] 7.3.1.3 Subtask - Allow custom detector plugin integration.  
    Description: Support domain-specific content safety policies.
 
-  [ ] 7.3.2 Task - Implement redaction and masking workflow  
+  [x] 7.3.2 Task - Implement redaction and masking workflow  
   Description: Apply policy-driven transformations for preview and export contexts.
-   [ ] 7.3.2.1 Subtask - Mask sensitive values in rendered previews.  
+   [x] 7.3.2.1 Subtask - Mask sensitive values in rendered previews.  
    Description: Prevent accidental exposure in shared outputs.
-   [ ] 7.3.2.2 Subtask - Add policy exceptions and approvals path.  
+   [x] 7.3.2.2 Subtask - Add policy exceptions and approvals path.  
    Description: Permit explicit override in controlled contexts.
-   [ ] 7.3.2.3 Subtask - Preserve secure raw access path for authorized operations.  
+   [x] 7.3.2.3 Subtask - Preserve secure raw access path for authorized operations.  
    Description: Avoid irreversible data loss from masking flow.
 
  [ ] 7.4 Section - Observability and Reliability Controls  

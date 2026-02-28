@@ -585,9 +585,10 @@ defmodule Jido.Document.Agent do
 
   defp compact_payload(%{} = value) do
     value
-    |> Map.drop([:document, :preview, :history_model])
+    |> Map.drop([:document, :preview, :history_model, :safety])
     |> maybe_put(:document_revision, value[:document] && value.document.revision)
     |> maybe_put(:history, value[:history])
+    |> maybe_put(:safety, summarize_safety(value[:safety]))
     |> maybe_put(
       :preview_summary,
       value[:preview] && %{toc_size: length(value.preview.toc || [])}
@@ -595,6 +596,15 @@ defmodule Jido.Document.Agent do
   end
 
   defp compact_payload(_), do: %{}
+
+  defp summarize_safety(%{findings: findings}) when is_list(findings) do
+    severities =
+      findings |> Enum.group_by(& &1.severity) |> Map.new(fn {k, v} -> {k, length(v)} end)
+
+    %{findings_count: length(findings), severities: severities}
+  end
+
+  defp summarize_safety(_), do: nil
 
   defp current_revision(%__MODULE__{document: %Document{revision: revision}}), do: revision
   defp current_revision(_), do: nil
