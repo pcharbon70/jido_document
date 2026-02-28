@@ -3,10 +3,10 @@
 Back to index: [README](./README.md)
 
 ## Relevant Shared APIs / Interfaces
-- `JidoDocs.Renderer`
-- `JidoDocs.Actions.Render`
-- `JidoDocs.Agent` preview state
-- Signal `jido_docs/document/rendered`
+- `Jido.Document.Renderer`
+- `Jido.Document.Actions.Render`
+- `Jido.Document.Agent` preview state
+- Signal `jido_document/document/rendered`
 
 ## Relevant Assumptions / Defaults
 - `Mdex` is default renderer.
@@ -19,7 +19,7 @@ Description: Deliver high-quality markdown rendering with performant, reliable p
  [x] 4.1 Section - Renderer Pipeline Foundation  
  Description: Build a configurable rendering pipeline with stable output contracts.
 
-  [x] 4.1.1 Task - Implement `JidoDocs.Renderer` pipeline with `Mdex`  
+  [x] 4.1.1 Task - Implement `Jido.Document.Renderer` pipeline with `Mdex`  
   Description: Convert markdown body into HTML and structured preview artifacts.
    [x] 4.1.1.1 Subtask - Configure default markdown extensions and parsing options.  
    Description: Ensure predictable markdown feature support across adapters.

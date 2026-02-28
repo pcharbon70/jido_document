@@ -3,8 +3,8 @@
 Back to index: [README](./README.md)
 
 ## Relevant Shared APIs / Interfaces
-- `JidoDocs.SessionRegistry`
-- `JidoDocs.Agent`
+- `Jido.Document.SessionRegistry`
+- `Jido.Document.Agent`
 - Signal subscription APIs
 - LiveView/TUI/Desktop transport adapters
 
@@ -13,110 +13,110 @@ Back to index: [README](./README.md)
 - Agent remains the canonical state owner.
 - Adapters are thin clients over action and signal contracts.
 
-[ ] 5 Phase 5 - Interface Adapters and Session Coordination  
+[x] 5 Phase 5 - Interface Adapters and Session Coordination  
 Description: Connect LiveView, TUI, and Desktop clients to shared session agents with deterministic synchronization.
 
- [ ] 5.1 Section - Session Registry and Ownership Model  
+ [x] 5.1 Section - Session Registry and Ownership Model  
  Description: Implement process discovery, ownership, and concurrent client coordination.
 
-  [ ] 5.1.1 Task - Implement session registry and lookup APIs  
+  [x] 5.1.1 Task - Implement session registry and lookup APIs  
   Description: Provide robust create/get/list lifecycle for session processes.
-   [ ] 5.1.1.1 Subtask - Add stable session ID generation strategy.  
+   [x] 5.1.1.1 Subtask - Add stable session ID generation strategy.  
    Description: Ensure deterministic mapping for file-backed sessions.
-   [ ] 5.1.1.2 Subtask - Support explicit and lazy session creation.  
+   [x] 5.1.1.2 Subtask - Support explicit and lazy session creation.  
    Description: Create sessions on demand with default or provided config.
-   [ ] 5.1.1.3 Subtask - Add stale session cleanup policies.  
+   [x] 5.1.1.3 Subtask - Add stale session cleanup policies.  
    Description: Reclaim idle processes safely.
 
-  [ ] 5.1.2 Task - Implement ownership and locking semantics  
+  [x] 5.1.2 Task - Implement ownership and locking semantics  
   Description: Avoid conflicting write operations across adapters.
-   [ ] 5.1.2.1 Subtask - Add optimistic lock token support.  
+   [x] 5.1.2.1 Subtask - Add optimistic lock token support.  
    Description: Detect stale client writes deterministically.
-   [ ] 5.1.2.2 Subtask - Add lock conflict response contract.  
+   [x] 5.1.2.2 Subtask - Add lock conflict response contract.  
    Description: Provide actionable conflict diagnostics to adapters.
-   [ ] 5.1.2.3 Subtask - Add administrative takeover path.  
+   [x] 5.1.2.3 Subtask - Add administrative takeover path.  
    Description: Allow controlled override for stuck sessions.
 
- [ ] 5.2 Section - LiveView Adapter  
+ [x] 5.2 Section - LiveView Adapter  
  Description: Provide a first-class Phoenix LiveView integration path.
 
-  [ ] 5.2.1 Task - Implement LiveView command and event bridge  
+  [x] 5.2.1 Task - Implement LiveView command and event bridge  
   Description: Map LiveView events to actions and signals to assigns updates.
-   [ ] 5.2.1.1 Subtask - Implement mount/connect session bootstrap.  
+   [x] 5.2.1.1 Subtask - Implement mount/connect session bootstrap.  
    Description: Initialize or attach to session by file path/session ID.
-   [ ] 5.2.1.2 Subtask - Forward form and textarea change events.  
+   [x] 5.2.1.2 Subtask - Forward form and textarea change events.  
    Description: Route frontmatter/body updates via agent commands.
-   [ ] 5.2.1.3 Subtask - Subscribe and map signals to assigns.  
+   [x] 5.2.1.3 Subtask - Subscribe and map signals to assigns.  
    Description: Keep UI state synchronized with agent state.
 
-  [ ] 5.2.2 Task - Implement schema-driven frontmatter form generation  
-  Description: Build dynamic forms from `JidoDocs.Schema` definitions.
-   [ ] 5.2.2.1 Subtask - Map field types to LiveView form components.  
+  [x] 5.2.2 Task - Implement schema-driven frontmatter form generation  
+  Description: Build dynamic forms from `Jido.Document.Schema` definitions.
+   [x] 5.2.2.1 Subtask - Map field types to LiveView form components.  
    Description: Support booleans, arrays, enums, and text values.
-   [ ] 5.2.2.2 Subtask - Render inline validation errors and hints.  
+   [x] 5.2.2.2 Subtask - Render inline validation errors and hints.  
    Description: Display field-path diagnostics from schema validation.
-   [ ] 5.2.2.3 Subtask - Add dirty/saving state indicators.  
+   [x] 5.2.2.3 Subtask - Add dirty/saving state indicators.  
    Description: Reflect session state transitions in UI controls.
 
- [ ] 5.3 Section - TUI Adapter  
+ [x] 5.3 Section - TUI Adapter  
  Description: Enable terminal-native workflows with low-latency synchronization.
 
-  [ ] 5.3.1 Task - Implement TUI command mapping and event loop integration  
+  [x] 5.3.1 Task - Implement TUI command mapping and event loop integration  
   Description: Route keyboard commands to session actions and updates.
-   [ ] 5.3.1.1 Subtask - Define keybinding-to-action map.  
+   [x] 5.3.1.1 Subtask - Define keybinding-to-action map.  
    Description: Support load, update, save, undo, and preview refresh controls.
-   [ ] 5.3.1.2 Subtask - Implement split-pane edit/preview model.  
+   [x] 5.3.1.2 Subtask - Implement split-pane edit/preview model.  
    Description: Synchronize content and rendered output in terminal layouts.
-   [ ] 5.3.1.3 Subtask - Implement signal-driven status bar updates.  
+   [x] 5.3.1.3 Subtask - Implement signal-driven status bar updates.  
    Description: Show session revision, save state, and errors.
 
-  [ ] 5.3.2 Task - Implement TUI resilience and accessibility controls  
+  [x] 5.3.2 Task - Implement TUI resilience and accessibility controls  
   Description: Handle constrained terminals and unstable transport links.
-   [ ] 5.3.2.1 Subtask - Add redraw throttling and viewport optimization.  
+   [x] 5.3.2.1 Subtask - Add redraw throttling and viewport optimization.  
    Description: Avoid flicker and excess CPU in rapid update flows.
-   [ ] 5.3.2.2 Subtask - Add low-color and narrow-width fallback layouts.  
+   [x] 5.3.2.2 Subtask - Add low-color and narrow-width fallback layouts.  
    Description: Preserve usability under limited terminal capabilities.
-   [ ] 5.3.2.3 Subtask - Add disconnect/reconnect handling.  
+   [x] 5.3.2.3 Subtask - Add disconnect/reconnect handling.  
    Description: Recover session linkage without data loss.
 
- [ ] 5.4 Section - Desktop Adapter  
+ [x] 5.4 Section - Desktop Adapter  
  Description: Expose robust IPC integration for desktop clients.
 
-  [ ] 5.4.1 Task - Implement desktop IPC command and event contracts  
+  [x] 5.4.1 Task - Implement desktop IPC command and event contracts  
   Description: Define stable transport payloads for session operations.
-   [ ] 5.4.1.1 Subtask - Define IPC message schemas for action requests.  
+   [x] 5.4.1.1 Subtask - Define IPC message schemas for action requests.  
    Description: Standardize serialization and validation at boundaries.
-   [ ] 5.4.1.2 Subtask - Define event channel payloads for signals.  
+   [x] 5.4.1.2 Subtask - Define event channel payloads for signals.  
    Description: Broadcast updates and diagnostics with revision metadata.
-   [ ] 5.4.1.3 Subtask - Add reconnect and replay strategy.  
+   [x] 5.4.1.3 Subtask - Add reconnect and replay strategy.  
    Description: Restore client state after process or transport interruption.
 
-  [ ] 5.4.2 Task - Implement multi-window coordination behavior  
+  [x] 5.4.2 Task - Implement multi-window coordination behavior  
   Description: Ensure predictable state sharing across desktop windows.
-   [ ] 5.4.2.1 Subtask - Support shared-session and isolated-session modes.  
+   [x] 5.4.2.1 Subtask - Support shared-session and isolated-session modes.  
    Description: Allow per-window configuration for collaboration style.
-   [ ] 5.4.2.2 Subtask - Broadcast lock/ownership changes across windows.  
+   [x] 5.4.2.2 Subtask - Broadcast lock/ownership changes across windows.  
    Description: Keep write permissions visible and synchronized.
-   [ ] 5.4.2.3 Subtask - Prompt conflict resolution on simultaneous edits.  
+   [x] 5.4.2.3 Subtask - Prompt conflict resolution on simultaneous edits.  
    Description: Prevent silent overwrite in multi-window scenarios.
 
- [ ] 5.5 Section - Phase 5 Integration Tests  
+ [x] 5.5 Section - Phase 5 Integration Tests  
  Description: Validate cross-adapter session consistency and conflict behavior.
 
-  [ ] 5.5.1 Task - Adapter consistency integration tests  
+  [x] 5.5.1 Task - Adapter consistency integration tests  
   Description: Ensure all adapters observe and apply the same session state changes.
-   [ ] 5.5.1.1 Subtask - Simulate LiveView and TUI connected to one session.  
+   [x] 5.5.1.1 Subtask - Simulate LiveView and TUI connected to one session.  
    Description: Verify signal fanout and consistent revision updates.
-   [ ] 5.5.1.2 Subtask - Simulate Desktop multi-window shared session.  
+   [x] 5.5.1.2 Subtask - Simulate Desktop multi-window shared session.  
    Description: Verify ownership and lock state propagation.
-   [ ] 5.5.1.3 Subtask - Verify adapter-specific diagnostics mapping.  
+   [x] 5.5.1.3 Subtask - Verify adapter-specific diagnostics mapping.  
    Description: Ensure errors appear correctly in each interface.
 
-  [ ] 5.5.2 Task - Conflict and recovery integration tests  
+  [x] 5.5.2 Task - Conflict and recovery integration tests  
   Description: Validate deterministic behavior under concurrent adapter writes.
-   [ ] 5.5.2.1 Subtask - Simulate stale lock token submissions.  
+   [x] 5.5.2.1 Subtask - Simulate stale lock token submissions.  
    Description: Assert conflict response contract and no silent overwrite.
-   [ ] 5.5.2.2 Subtask - Simulate adapter disconnect during save/render.  
+   [x] 5.5.2.2 Subtask - Simulate adapter disconnect during save/render.  
    Description: Ensure reconnect can recover latest session snapshot.
-   [ ] 5.5.2.3 Subtask - Simulate forced ownership takeover.  
+   [x] 5.5.2.3 Subtask - Simulate forced ownership takeover.  
    Description: Validate auditability and predictable conflict resolution flow.

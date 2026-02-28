@@ -3,10 +3,10 @@
 Back to index: [README](./README.md)
 
 ## Relevant Shared APIs / Interfaces
-- `JidoDocs.Document`
-- `JidoDocs.Agent`
-- `JidoDocs.SessionRegistry`
-- `JidoDocs.Config`
+- `Jido.Document.Document`
+- `Jido.Document.Agent`
+- `Jido.Document.SessionRegistry`
+- `Jido.Document.Config`
 
 ## Relevant Assumptions / Defaults
 - API return shape is `{:ok, value} | {:error, reason}`.
@@ -21,7 +21,7 @@ Description: Establish project skeleton, compile-safe module boundaries, and det
 
   [ ] 1.1.1 Task - Establish namespace and ownership boundaries  
   Description: Define which modules own parsing, rendering, actions, and session state.
-   [ ] 1.1.1.1 Subtask - Create top-level modules (`JidoDocs`, `JidoDocs.Document`, `JidoDocs.Agent`, `JidoDocs.Config`).  
+   [ ] 1.1.1.1 Subtask - Create top-level modules (`Jido.Document`, `Jido.Document.Document`, `Jido.Document.Agent`, `Jido.Document.Config`).  
    Description: Ensure compile-ready stubs with `@moduledoc` and types.
    [ ] 1.1.1.2 Subtask - Define boundary modules for `actions/`, `schema/`, `renderer/`, and `transport/`.  
    Description: Prevent cross-layer coupling early.
@@ -61,7 +61,7 @@ Description: Establish project skeleton, compile-safe module boundaries, and det
  [ ] 1.3 Section - Runtime Configuration and Environment Profiles  
  Description: Provide validated defaults and predictable override precedence.
 
-  [ ] 1.3.1 Task - Implement `JidoDocs.Config` schema and defaults  
+  [ ] 1.3.1 Task - Implement `Jido.Document.Config` schema and defaults  
   Description: Capture all configurable knobs for sessions, parsing, rendering, and persistence.
    [ ] 1.3.1.1 Subtask - Add parser and delimiter defaults.  
    Description: Define default frontmatter syntax and delimiter handling.
