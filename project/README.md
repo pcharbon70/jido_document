@@ -24,6 +24,11 @@ end
 - Quickstart: [`docs/quickstart.md`](./docs/quickstart.md)
 - Integration boundaries: [`docs/integration-boundaries.md`](./docs/integration-boundaries.md)
 - Troubleshooting: [`docs/troubleshooting.md`](./docs/troubleshooting.md)
+- Migration guide: [`docs/migration-guide.md`](./docs/migration-guide.md)
+- Metadata mapping templates: [`docs/metadata-mapping-templates.md`](./docs/metadata-mapping-templates.md)
+- Plugin API lifecycle policy: [`docs/plugin-api-lifecycle-policy.md`](./docs/plugin-api-lifecycle-policy.md)
+- Contribution and review guidelines: [`docs/contribution-review-guidelines.md`](./docs/contribution-review-guidelines.md)
+- Architecture review cadence: [`docs/architecture-review-cadence.md`](./docs/architecture-review-cadence.md)
 - Minimal sample: `mix run examples/minimal_api_sample.exs`
 - Session concurrency sample: `mix run examples/session_concurrency_sample.exs`
 - Crash recovery sample: `mix run examples/crash_recovery_sample.exs`
@@ -40,4 +45,18 @@ Validate snapshot:
 
 ```bash
 mix jido.api_manifest --check
+```
+
+## Migration Tooling
+
+List bundled templates:
+
+```bash
+mix jido.migrate_docs --list-templates
+```
+
+Dry-run migration:
+
+```bash
+mix jido.migrate_docs --source ./content --template blog_frontmatter
 ```

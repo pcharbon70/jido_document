@@ -60,7 +60,8 @@ defmodule JidoDocument.MixProject do
         "mix.exs",
         "README.md",
         "docs",
-        "priv/api/public_api_manifest.exs"
+        "priv/api/public_api_manifest.exs",
+        "priv/migration/templates"
       ]
     ]
   end
@@ -75,7 +76,12 @@ defmodule JidoDocument.MixProject do
         "docs/release-blocking-criteria.md",
         "docs/quickstart.md",
         "docs/integration-boundaries.md",
-        "docs/troubleshooting.md"
+        "docs/troubleshooting.md",
+        "docs/migration-guide.md",
+        "docs/metadata-mapping-templates.md",
+        "docs/plugin-api-lifecycle-policy.md",
+        "docs/contribution-review-guidelines.md",
+        "docs/architecture-review-cadence.md"
       ]
     ]
   end

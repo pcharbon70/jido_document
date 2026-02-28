@@ -79,25 +79,25 @@ Description: Finalize production readiness through stable APIs, complete docs, a
    [x] 8.3.2.3 Subtask - Automate package and docs publication.  
    Description: Publish Hex package and hosted documentation.
 
- [ ] 8.4 Section - Migration and Evolution Roadmap  
+ [x] 8.4 Section - Migration and Evolution Roadmap  
  Description: Support existing adopters and guide long-term extension strategy.
 
-  [ ] 8.4.1 Task - Define migration strategy for legacy document workflows  
+  [x] 8.4.1 Task - Define migration strategy for legacy document workflows  
   Description: Enable smooth adoption from pre-existing markdown/frontmatter systems.
-   [ ] 8.4.1.1 Subtask - Provide migration tool for existing document directories.  
+   [x] 8.4.1.1 Subtask - Provide migration tool for existing document directories.  
    Description: Normalize documents to new canonical model.
-   [ ] 8.4.1.2 Subtask - Provide metadata mapping templates.  
+   [x] 8.4.1.2 Subtask - Provide metadata mapping templates.  
    Description: Translate legacy keys into schema-backed fields.
-   [ ] 8.4.1.3 Subtask - Provide staged rollout and rollback guidance.  
+   [x] 8.4.1.3 Subtask - Provide staged rollout and rollback guidance.  
    Description: Minimize migration risk in production use.
 
-  [ ] 8.4.2 Task - Define extension governance and roadmap cadence  
+  [x] 8.4.2 Task - Define extension governance and roadmap cadence  
   Description: Keep plugin ecosystem and architecture evolution predictable.
-   [ ] 8.4.2.1 Subtask - Define plugin API lifecycle policy.  
+   [x] 8.4.2.1 Subtask - Define plugin API lifecycle policy.  
    Description: Clarify stability guarantees for extension authors.
-   [ ] 8.4.2.2 Subtask - Publish contribution and review guidelines.  
+   [x] 8.4.2.2 Subtask - Publish contribution and review guidelines.  
    Description: Standardize quality expectations for community changes.
-   [ ] 8.4.2.3 Subtask - Schedule periodic architecture review checkpoints.  
+   [x] 8.4.2.3 Subtask - Schedule periodic architecture review checkpoints.  
    Description: Reassess roadmap and technical debt at fixed intervals.
 
  [ ] 8.5 Section - Phase 8 Integration Tests  
