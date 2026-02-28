@@ -25,7 +25,8 @@ defmodule Jido.Document.Checkpoint do
     Path.join(checkpoint_dir(opts), session_id <> ".checkpoint")
   end
 
-  @spec write(String.t(), Document.t(), map() | nil, keyword()) :: {:ok, Path.t()} | {:error, Error.t()}
+  @spec write(String.t(), Document.t(), map() | nil, keyword()) ::
+          {:ok, Path.t()} | {:error, Error.t()}
   def write(session_id, %Document{} = document, disk_snapshot, opts \\ []) do
     path = checkpoint_path(session_id, opts)
 
@@ -42,7 +43,8 @@ defmodule Jido.Document.Checkpoint do
       {:ok, path}
     else
       {:error, reason} ->
-        {:error, Error.new(:filesystem_error, "failed to write checkpoint", %{path: path, reason: reason})}
+        {:error,
+         Error.new(:filesystem_error, "failed to write checkpoint", %{path: path, reason: reason})}
     end
   end
 
@@ -58,7 +60,8 @@ defmodule Jido.Document.Checkpoint do
         {:error, :not_found}
 
       {:error, reason} ->
-        {:error, Error.new(:filesystem_error, "failed to read checkpoint", %{path: path, reason: reason})}
+        {:error,
+         Error.new(:filesystem_error, "failed to read checkpoint", %{path: path, reason: reason})}
     end
   end
 
@@ -67,9 +70,15 @@ defmodule Jido.Document.Checkpoint do
     path = checkpoint_path(session_id, opts)
 
     case File.rm(path) do
-      :ok -> :ok
-      {:error, :enoent} -> :ok
-      {:error, reason} -> {:error, Error.new(:filesystem_error, "failed to remove checkpoint", %{path: path, reason: reason})}
+      :ok ->
+        :ok
+
+      {:error, :enoent} ->
+        :ok
+
+      {:error, reason} ->
+        {:error,
+         Error.new(:filesystem_error, "failed to remove checkpoint", %{path: path, reason: reason})}
     end
   end
 
@@ -91,7 +100,11 @@ defmodule Jido.Document.Checkpoint do
         {:ok, []}
 
       {:error, reason} ->
-        {:error, Error.new(:filesystem_error, "failed to list checkpoint directory", %{path: dir, reason: reason})}
+        {:error,
+         Error.new(:filesystem_error, "failed to list checkpoint directory", %{
+           path: dir,
+           reason: reason
+         })}
     end
   end
 
@@ -103,10 +116,15 @@ defmodule Jido.Document.Checkpoint do
         {:error, Error.new(:parse_failed, "invalid checkpoint payload", %{path: path})}
 
       payload[:schema_version] != 1 ->
-        {:error, Error.new(:validation_failed, "unsupported checkpoint schema version", %{path: path, schema_version: payload[:schema_version]})}
+        {:error,
+         Error.new(:validation_failed, "unsupported checkpoint schema version", %{
+           path: path,
+           schema_version: payload[:schema_version]
+         })}
 
       not match?(%Document{}, payload[:document]) ->
-        {:error, Error.new(:validation_failed, "checkpoint missing document payload", %{path: path})}
+        {:error,
+         Error.new(:validation_failed, "checkpoint missing document payload", %{path: path})}
 
       true ->
         {:ok, payload}

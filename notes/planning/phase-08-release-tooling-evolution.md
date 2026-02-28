@@ -58,25 +58,25 @@ Description: Finalize production readiness through stable APIs, complete docs, a
    [x] 8.2.2.3 Subtask - Create crash/recovery sample integration.  
    Description: Demonstrate reconnect-safe session restoration behavior.
 
- [ ] 8.3 Section - CI/CD and Release Automation  
+ [x] 8.3 Section - CI/CD and Release Automation  
  Description: Automate quality enforcement and repeatable release execution.
 
-  [ ] 8.3.1 Task - Implement full test and static analysis pipeline  
+  [x] 8.3.1 Task - Implement full test and static analysis pipeline  
   Description: Gate releases on comprehensive automated verification.
-   [ ] 8.3.1.1 Subtask - Add unit, integration, and property tests to CI.  
+   [x] 8.3.1.1 Subtask - Add unit, integration, and property tests to CI.  
    Description: Ensure broad correctness coverage.
-   [ ] 8.3.1.2 Subtask - Add formatting, linting, and dialyzer checks.  
+   [x] 8.3.1.2 Subtask - Add formatting, linting, and dialyzer checks.  
    Description: Enforce code quality and type consistency.
-   [ ] 8.3.1.3 Subtask - Add Elixir/OTP version matrix builds.  
+   [x] 8.3.1.3 Subtask - Add Elixir/OTP version matrix builds.  
    Description: Verify compatibility across supported runtimes.
 
-  [ ] 8.3.2 Task - Implement packaging and release workflow  
+  [x] 8.3.2 Task - Implement packaging and release workflow  
   Description: Produce reproducible artifacts and publish with confidence.
-   [ ] 8.3.2.1 Subtask - Automate changelog and release note generation.  
+   [x] 8.3.2.1 Subtask - Automate changelog and release note generation.  
    Description: Ensure consistent communication of changes.
-   [ ] 8.3.2.2 Subtask - Automate signed tag and artifact creation.  
+   [x] 8.3.2.2 Subtask - Automate signed tag and artifact creation.  
    Description: Improve release integrity and traceability.
-   [ ] 8.3.2.3 Subtask - Automate package and docs publication.  
+   [x] 8.3.2.3 Subtask - Automate package and docs publication.  
    Description: Publish Hex package and hosted documentation.
 
  [ ] 8.4 Section - Migration and Evolution Roadmap  

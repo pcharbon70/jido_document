@@ -1,0 +1,100 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (for example 0.1.1)"
+        required: true
+        type: string
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: project
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: erlef/setup-beam@v1
+        with:
+          elixir-version: "1.18.4"
+          otp-version: "27.3"
+      - run: mix deps.get
+      - run: mix ci
+
+  create-notes:
+    runs-on: ubuntu-latest
+    needs: verify
+    defaults:
+      run:
+        working-directory: project
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: erlef/setup-beam@v1
+        with:
+          elixir-version: "1.18.4"
+          otp-version: "27.3"
+      - run: mix deps.get
+      - name: Update changelog
+        run: mix jido.changelog --version "${{ github.ref_name }}"
+      - name: Generate release notes
+        run: mix jido.release_notes --version "${{ github.ref_name }}"
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: |
+            project/CHANGELOG.md
+            project/RELEASE_NOTES.md
+
+  signed-tag:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    needs: verify
+    steps:
+      - uses: actions/checkout@v4
+      - name: Import GPG key
+        if: ${{ secrets.RELEASE_GPG_PRIVATE_KEY != '' && secrets.RELEASE_GPG_PASSPHRASE != '' }}
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.RELEASE_GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.RELEASE_GPG_PASSPHRASE }}
+      - name: Create signed tag
+        if: ${{ secrets.RELEASE_GPG_PRIVATE_KEY != '' && secrets.RELEASE_GPG_PASSPHRASE != '' }}
+        run: |
+          VERSION="v${{ github.event.inputs.version }}"
+          git tag -s "$VERSION" -m "Release $VERSION"
+          git push origin "$VERSION"
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: create-notes
+    defaults:
+      run:
+        working-directory: project
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: erlef/setup-beam@v1
+        with:
+          elixir-version: "1.18.4"
+          otp-version: "27.3"
+      - run: mix deps.get
+      - name: Build docs
+        run: mix docs
+      - name: Publish package to Hex
+        if: ${{ secrets.HEX_API_KEY != '' }}
+        env:
+          HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
+        run: mix hex.publish --yes
+      - name: Publish docs to HexDocs
+        if: ${{ secrets.HEX_API_KEY != '' }}
+        env:
+          HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
+        run: mix hex.publish docs --yes
