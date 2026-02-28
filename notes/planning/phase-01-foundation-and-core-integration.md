@@ -13,7 +13,7 @@ Back to index: [README](./README.md)
 - Frontmatter supports YAML and TOML delimiters.
 - Sessions are process-isolated and supervised.
 
-[ ] 1 Phase 1 - Foundation and Core Integration  
+[x] 1 Phase 1 - Foundation and Core Integration  
 Description: Establish project skeleton, compile-safe module boundaries, and deterministic runtime contracts.
 
  [x] 1.1 Section - Repository and Application Bootstrap  
@@ -79,23 +79,23 @@ Description: Establish project skeleton, compile-safe module boundaries, and det
    [x] 1.3.2.3 Subtask - Emit structured config validation errors.  
    Description: Include field paths and actionable diagnostics.
 
- [ ] 1.4 Section - Phase 1 Integration Tests  
+ [x] 1.4 Section - Phase 1 Integration Tests  
  Description: Validate bootstrap and compatibility behavior end-to-end.
 
-  [ ] 1.4.1 Task - Bootstrap integration test scenarios  
+  [x] 1.4.1 Task - Bootstrap integration test scenarios  
   Description: Prove application starts with valid defaults and module boundaries hold.
-   [ ] 1.4.1.1 Subtask - Start supervision tree with baseline config.  
+   [x] 1.4.1.1 Subtask - Start supervision tree with baseline config.  
    Description: Verify required workers and registries boot successfully.
-   [ ] 1.4.1.2 Subtask - Validate config retrieval and normalization.  
+   [x] 1.4.1.2 Subtask - Validate config retrieval and normalization.  
    Description: Assert precedence and default filling behavior.
-   [ ] 1.4.1.3 Subtask - Verify telemetry boot events.  
+   [x] 1.4.1.3 Subtask - Verify telemetry boot events.  
    Description: Confirm startup instrumentation fires expected events.
 
-  [ ] 1.4.2 Task - Compatibility and boundary integration tests  
+  [x] 1.4.2 Task - Compatibility and boundary integration tests  
   Description: Confirm dependency guards and adapter contracts remain stable.
-   [ ] 1.4.2.1 Subtask - Simulate missing dependency capabilities.  
+   [x] 1.4.2.1 Subtask - Simulate missing dependency capabilities.  
    Description: Ensure clear error messages and fail-fast behavior.
-   [ ] 1.4.2.2 Subtask - Validate adapter error translation contract.  
+   [x] 1.4.2.2 Subtask - Validate adapter error translation contract.  
    Description: Assert external parser/renderer failures map correctly.
-   [ ] 1.4.2.3 Subtask - Verify fallback parser/renderer selection.  
+   [x] 1.4.2.3 Subtask - Verify fallback parser/renderer selection.  
    Description: Ensure deterministic behavior when optional dependencies differ.
