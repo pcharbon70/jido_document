@@ -13,7 +13,7 @@ Back to index: [README](./README.md)
 - Release quality gates run on every candidate.
 - Documentation and examples are required release artifacts.
 
-[ ] 8 Phase 8 - Release, Tooling, and Evolution  
+[x] 8 Phase 8 - Release, Tooling, and Evolution  
 Description: Finalize production readiness through stable APIs, complete docs, automated releases, and roadmap governance.
 
  [x] 8.1 Section - Public API Hardening and Stability  
@@ -100,23 +100,23 @@ Description: Finalize production readiness through stable APIs, complete docs, a
    [x] 8.4.2.3 Subtask - Schedule periodic architecture review checkpoints.  
    Description: Reassess roadmap and technical debt at fixed intervals.
 
- [ ] 8.5 Section - Phase 8 Integration Tests  
+ [x] 8.5 Section - Phase 8 Integration Tests  
  Description: Validate release readiness, migration safety, and operational launch behavior.
 
-  [ ] 8.5.1 Task - Release readiness integration tests  
+  [x] 8.5.1 Task - Release readiness integration tests  
   Description: Ensure final artifacts and workflows are reproducible and stable.
-   [ ] 8.5.1.1 Subtask - Execute canary validation on representative workloads.  
+   [x] 8.5.1.1 Subtask - Execute canary validation on representative workloads.  
    Description: Confirm functional and performance baselines before broad release.
-   [ ] 8.5.1.2 Subtask - Execute rollback rehearsal.  
+   [x] 8.5.1.2 Subtask - Execute rollback rehearsal.  
    Description: Validate safe reversal of release steps.
-   [ ] 8.5.1.3 Subtask - Verify artifact reproducibility across environments.  
+   [x] 8.5.1.3 Subtask - Verify artifact reproducibility across environments.  
    Description: Ensure deterministic build outputs.
 
-  [ ] 8.5.2 Task - Post-release verification integration tests  
+  [x] 8.5.2 Task - Post-release verification integration tests  
   Description: Validate immediate production health and user-facing guidance quality.
-   [ ] 8.5.2.1 Subtask - Validate first-day operational telemetry and error budgets.  
+   [x] 8.5.2.1 Subtask - Validate first-day operational telemetry and error budgets.  
    Description: Confirm no hidden launch regressions.
-   [ ] 8.5.2.2 Subtask - Validate published docs and sample commands.  
+   [x] 8.5.2.2 Subtask - Validate published docs and sample commands.  
    Description: Ensure examples run as documented.
-   [ ] 8.5.2.3 Subtask - Validate issue intake and triage loop.  
+   [x] 8.5.2.3 Subtask - Validate issue intake and triage loop.  
    Description: Convert launch feedback into prioritized follow-up work.

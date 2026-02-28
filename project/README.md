@@ -29,6 +29,7 @@ end
 - Plugin API lifecycle policy: [`docs/plugin-api-lifecycle-policy.md`](./docs/plugin-api-lifecycle-policy.md)
 - Contribution and review guidelines: [`docs/contribution-review-guidelines.md`](./docs/contribution-review-guidelines.md)
 - Architecture review cadence: [`docs/architecture-review-cadence.md`](./docs/architecture-review-cadence.md)
+- Post-release verification: [`docs/post-release-verification.md`](./docs/post-release-verification.md)
 - Minimal sample: `mix run examples/minimal_api_sample.exs`
 - Session concurrency sample: `mix run examples/session_concurrency_sample.exs`
 - Crash recovery sample: `mix run examples/crash_recovery_sample.exs`
@@ -59,4 +60,10 @@ Dry-run migration:
 
 ```bash
 mix jido.migrate_docs --source ./content --template blog_frontmatter
+```
+
+Generate release-feedback triage report:
+
+```bash
+mix jido.triage_report --input ./issues.exs --output ./triage.md --min-score 20
 ```

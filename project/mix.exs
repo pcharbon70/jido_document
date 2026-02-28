@@ -81,7 +81,8 @@ defmodule JidoDocument.MixProject do
         "docs/metadata-mapping-templates.md",
         "docs/plugin-api-lifecycle-policy.md",
         "docs/contribution-review-guidelines.md",
-        "docs/architecture-review-cadence.md"
+        "docs/architecture-review-cadence.md",
+        "docs/post-release-verification.md"
       ]
     ]
   end
