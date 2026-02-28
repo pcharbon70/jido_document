@@ -7,7 +7,7 @@ defmodule Jido.Document.Action do
   """
 
   alias Jido.Document.Action.{Context, Result}
-  alias Jido.Document.Error
+  alias Jido.Document.{Authorization, Error}
 
   @type idempotency :: :idempotent | :conditionally_idempotent | :non_idempotent
 
@@ -17,20 +17,29 @@ defmodule Jido.Document.Action do
 
   @spec execute(module(), map() | keyword(), map() | keyword()) :: Result.t()
   def execute(action_module, params, context_attrs) do
+    normalized_params = normalize_params(params)
+
     with {:ok, context} <- Context.new(context_attrs) do
       started = System.monotonic_time(:microsecond)
       action_name = action_name(action_module)
       idempotency = action_idempotency(action_module)
+      authorization_result = Authorization.authorize(action_name, normalized_params, context)
 
       result =
-        try do
-          action_module.run(normalize_params(params), context)
-        rescue
-          exception -> {:error, Error.from_exception(exception, %{action: action_name})}
-        catch
-          kind, reason ->
-            {:error,
-             Error.new(:internal, "caught #{kind}: #{inspect(reason)}", %{action: action_name})}
+        case authorization_result do
+          :ok ->
+            try do
+              action_module.run(normalized_params, context)
+            rescue
+              exception -> {:error, Error.from_exception(exception, %{action: action_name})}
+            catch
+              kind, reason ->
+                {:error,
+                 Error.new(:internal, "caught #{kind}: #{inspect(reason)}", %{action: action_name})}
+            end
+
+          {:error, %Error{} = error} ->
+            {:error, error}
         end
 
       duration_us = System.monotonic_time(:microsecond) - started
@@ -68,11 +77,15 @@ defmodule Jido.Document.Action do
   end
 
   defp action_name(action_module) do
-    if function_exported?(action_module, :name, 0), do: action_module.name(), else: action_module
+    if Code.ensure_loaded?(action_module) and function_exported?(action_module, :name, 0) do
+      action_module.name()
+    else
+      action_module
+    end
   end
 
   defp action_idempotency(action_module) do
-    if function_exported?(action_module, :idempotency, 0) do
+    if Code.ensure_loaded?(action_module) and function_exported?(action_module, :idempotency, 0) do
       action_module.idempotency()
     else
       :non_idempotent

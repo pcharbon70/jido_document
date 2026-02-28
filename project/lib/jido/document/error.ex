@@ -12,6 +12,7 @@ defmodule Jido.Document.Error do
           | :render_failed
           | :not_found
           | :conflict
+          | :forbidden
           | :busy
           | :subscription_error
           | :internal
@@ -72,6 +73,7 @@ defmodule Jido.Document.Error do
   def from_reason(:enoent, details), do: new(:not_found, "Resource not found", details)
   def from_reason(:busy, details), do: new(:busy, "Operation is currently busy", details)
   def from_reason(:conflict, details), do: new(:conflict, "Operation conflict", details)
+  def from_reason(:forbidden, details), do: new(:forbidden, "Operation forbidden", details)
 
   def from_reason(reason, details) when is_binary(reason) do
     new(:internal, reason, details)
@@ -136,6 +138,7 @@ defmodule Jido.Document.Error do
   def category_for(:render_failed), do: :render
   def category_for(:not_found), do: :io
   def category_for(:conflict), do: :lifecycle
+  def category_for(:forbidden), do: :lifecycle
   def category_for(:busy), do: :lifecycle
   def category_for(:subscription_error), do: :lifecycle
   def category_for(:internal), do: :system

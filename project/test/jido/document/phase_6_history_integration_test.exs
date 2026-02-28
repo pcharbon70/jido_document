@@ -17,7 +17,10 @@ defmodule Jido.Document.Phase6HistoryIntegrationTest do
     fs_opts = [context_options: %{workspace_root: "/"}]
 
     on_exit(fn ->
-      if Process.alive?(agent), do: GenServer.stop(agent, :normal)
+      if Process.alive?(agent) do
+        _ = catch_exit(GenServer.stop(agent, :normal))
+      end
+
       File.rm_rf(tmp_dir)
     end)
 

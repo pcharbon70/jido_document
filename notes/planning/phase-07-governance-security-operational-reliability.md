@@ -16,25 +16,25 @@ Back to index: [README](./README.md)
 [ ] 7 Phase 7 - Governance, Security, and Operational Reliability  
 Description: Harden the system with policy controls, auditable behavior, and resilience safeguards.
 
- [ ] 7.1 Section - Access Control and Workspace Safety  
+ [x] 7.1 Section - Access Control and Workspace Safety  
  Description: Prevent unauthorized reads/writes and unsafe path traversal.
 
-  [ ] 7.1.1 Task - Implement path and workspace policy enforcement  
+  [x] 7.1.1 Task - Implement path and workspace policy enforcement  
   Description: Restrict document operations to approved workspace boundaries.
-   [ ] 7.1.1.1 Subtask - Canonicalize all filesystem paths before use.  
+   [x] 7.1.1.1 Subtask - Canonicalize all filesystem paths before use.  
    Description: Resolve symlinks and relative segments deterministically.
-   [ ] 7.1.1.2 Subtask - Block traversal and out-of-workspace access.  
+   [x] 7.1.1.2 Subtask - Block traversal and out-of-workspace access.  
    Description: Reject unsafe paths with explicit policy errors.
-   [ ] 7.1.1.3 Subtask - Add policy test fixtures for edge cases.  
+   [x] 7.1.1.3 Subtask - Add policy test fixtures for edge cases.  
    Description: Cover symlink and platform-specific path behavior.
 
-  [ ] 7.1.2 Task - Implement action-level authorization hooks  
+  [x] 7.1.2 Task - Implement action-level authorization hooks  
   Description: Enforce role- or actor-aware permission checks per command.
-   [ ] 7.1.2.1 Subtask - Inject actor context into action execution.  
+   [x] 7.1.2.1 Subtask - Inject actor context into action execution.  
    Description: Carry user/client identity through request lifecycle.
-   [ ] 7.1.2.2 Subtask - Define permission matrix for load/update/save/admin operations.  
+   [x] 7.1.2.2 Subtask - Define permission matrix for load/update/save/admin operations.  
    Description: Distinguish read, write, and control privileges.
-   [ ] 7.1.2.3 Subtask - Emit authorization deny events.  
+   [x] 7.1.2.3 Subtask - Emit authorization deny events.  
    Description: Provide traceable diagnostics and audit signals.
 
  [ ] 7.2 Section - Auditability and Provenance  

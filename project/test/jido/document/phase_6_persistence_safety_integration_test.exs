@@ -1,7 +1,7 @@
 defmodule Jido.Document.Phase6PersistenceSafetyIntegrationTest do
   use ExUnit.Case, async: false
 
-  alias Jido.Document.Agent
+  alias Jido.Document.{Agent, PathPolicy}
 
   setup do
     session_id = "phase6-persistence-" <> Integer.to_string(System.unique_integer([:positive]))
@@ -52,10 +52,11 @@ defmodule Jido.Document.Phase6PersistenceSafetyIntegrationTest do
     File.write!(ctx.source_path, external)
 
     result = Agent.command(ctx.agent, :save, %{path: ctx.source_path}, ctx.fs_opts)
+    {:ok, canonical_source_path} = PathPolicy.resolve_path(ctx.source_path, workspace_root: "/")
 
     assert result.status == :error
     assert result.error.code == :conflict
-    assert result.error.details.path == ctx.source_path
+    assert result.error.details.path == canonical_source_path
     assert result.error.details.remediation == [:reload, :overwrite, :merge_hook]
     assert File.read!(ctx.source_path) == external
   end

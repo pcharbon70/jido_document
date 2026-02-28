@@ -251,6 +251,7 @@ defmodule Jido.Document.Agent do
       session_id: state.session_id,
       path: Map.get(params, :path),
       document: Map.get(params, :document, state.document),
+      actor: command_actor(opts),
       options: Map.get(opts, :context_options, %{}),
       correlation_id: Map.get(opts, :correlation_id),
       idempotency_key: Map.get(opts, :idempotency_key),
@@ -265,6 +266,8 @@ defmodule Jido.Document.Agent do
         {ok_result, next_state}
 
       %Result{status: :error, error: error} = error_result ->
+        maybe_emit_authorization_denied(state, action, error, error_result.metadata)
+
         if action == :render do
           fallback_value = %{
             preview: choose_fallback_preview(state, error),
@@ -909,6 +912,25 @@ defmodule Jido.Document.Agent do
     Map.put(metadata, :duration_us, System.monotonic_time(:microsecond) - started)
   end
 
+  defp maybe_emit_authorization_denied(state, action, %Error{code: :forbidden} = error, metadata) do
+    actor = Map.get(error.details, :actor)
+
+    _ =
+      emit_signal(state, :failed, %{
+        action: :authorize,
+        revision: current_revision(state),
+        denied_action: action,
+        error: Error.to_map(error),
+        actor: actor,
+        rollback: false,
+        metadata: metadata
+      })
+
+    :ok
+  end
+
+  defp maybe_emit_authorization_denied(_state, _action, _error, _metadata), do: :ok
+
   defp bump_revision_sequence(state, action, metadata) do
     attrs = %{
       document_revision: current_revision(state),
@@ -944,6 +966,12 @@ defmodule Jido.Document.Agent do
   defp normalize_map(%{} = map), do: map
   defp normalize_map(list) when is_list(list), do: Map.new(list)
   defp normalize_map(_), do: %{}
+
+  defp command_actor(opts) do
+    top_level_actor = Map.get(opts, :actor)
+    context_actor = get_in(opts, [:context_options, :actor])
+    top_level_actor || context_actor
+  end
 
   defp inject_command_defaults(state, :save, params) do
     params =

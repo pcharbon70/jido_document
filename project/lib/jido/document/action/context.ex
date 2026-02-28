@@ -15,6 +15,7 @@ defmodule Jido.Document.Action.Context do
           session_id: String.t(),
           path: Path.t() | nil,
           document: Document.t() | nil,
+          actor: map() | nil,
           options: map(),
           correlation_id: String.t(),
           idempotency_key: String.t() | nil,
@@ -24,6 +25,7 @@ defmodule Jido.Document.Action.Context do
   defstruct session_id: nil,
             path: nil,
             document: nil,
+            actor: nil,
             options: %{},
             correlation_id: nil,
             idempotency_key: nil,
@@ -54,6 +56,7 @@ defmodule Jido.Document.Action.Context do
          session_id: session_id,
          path: normalize_optional_path(Map.get(attrs, :path)),
          document: Map.get(attrs, :document),
+         actor: normalize_actor(Map.get(attrs, :actor)),
          options: normalize_options(Map.get(attrs, :options, %{})),
          correlation_id: Map.get(attrs, :correlation_id, default_correlation_id()),
          idempotency_key: Map.get(attrs, :idempotency_key),
@@ -73,6 +76,10 @@ defmodule Jido.Document.Action.Context do
   defp normalize_options(options) when is_map(options), do: options
   defp normalize_options(options) when is_list(options), do: Map.new(options)
   defp normalize_options(_), do: %{}
+
+  defp normalize_actor(nil), do: nil
+  defp normalize_actor(%{} = actor), do: actor
+  defp normalize_actor(_), do: nil
 
   defp to_map(%{} = map), do: map
   defp to_map(list) when is_list(list), do: Map.new(list)
