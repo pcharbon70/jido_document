@@ -58,25 +58,25 @@ Description: Connect LiveView, TUI, and Desktop clients to shared session agents
    [x] 5.2.2.3 Subtask - Add dirty/saving state indicators.  
    Description: Reflect session state transitions in UI controls.
 
- [ ] 5.3 Section - TUI Adapter  
+ [x] 5.3 Section - TUI Adapter  
  Description: Enable terminal-native workflows with low-latency synchronization.
 
-  [ ] 5.3.1 Task - Implement TUI command mapping and event loop integration  
+  [x] 5.3.1 Task - Implement TUI command mapping and event loop integration  
   Description: Route keyboard commands to session actions and updates.
-   [ ] 5.3.1.1 Subtask - Define keybinding-to-action map.  
+   [x] 5.3.1.1 Subtask - Define keybinding-to-action map.  
    Description: Support load, update, save, undo, and preview refresh controls.
-   [ ] 5.3.1.2 Subtask - Implement split-pane edit/preview model.  
+   [x] 5.3.1.2 Subtask - Implement split-pane edit/preview model.  
    Description: Synchronize content and rendered output in terminal layouts.
-   [ ] 5.3.1.3 Subtask - Implement signal-driven status bar updates.  
+   [x] 5.3.1.3 Subtask - Implement signal-driven status bar updates.  
    Description: Show session revision, save state, and errors.
 
-  [ ] 5.3.2 Task - Implement TUI resilience and accessibility controls  
+  [x] 5.3.2 Task - Implement TUI resilience and accessibility controls  
   Description: Handle constrained terminals and unstable transport links.
-   [ ] 5.3.2.1 Subtask - Add redraw throttling and viewport optimization.  
+   [x] 5.3.2.1 Subtask - Add redraw throttling and viewport optimization.  
    Description: Avoid flicker and excess CPU in rapid update flows.
-   [ ] 5.3.2.2 Subtask - Add low-color and narrow-width fallback layouts.  
+   [x] 5.3.2.2 Subtask - Add low-color and narrow-width fallback layouts.  
    Description: Preserve usability under limited terminal capabilities.
-   [ ] 5.3.2.3 Subtask - Add disconnect/reconnect handling.  
+   [x] 5.3.2.3 Subtask - Add disconnect/reconnect handling.  
    Description: Recover session linkage without data loss.
 
  [ ] 5.4 Section - Desktop Adapter  
