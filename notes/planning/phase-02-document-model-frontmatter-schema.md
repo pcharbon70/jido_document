@@ -79,25 +79,25 @@ Description: Build the canonical document representation with deterministic pars
    [x] 2.3.2.3 Subtask - Emit unknown/extra key diagnostics policy.  
    Description: Configure warn, ignore, or reject behavior.
 
- [ ] 2.4 Section - Mutation and Canonicalization Utilities  
+ [x] 2.4 Section - Mutation and Canonicalization Utilities  
  Description: Ensure edits produce stable document states and output diffs.
 
-  [ ] 2.4.1 Task - Implement document mutation helpers  
+  [x] 2.4.1 Task - Implement document mutation helpers  
   Description: Update frontmatter and body while preserving invariants.
-   [ ] 2.4.1.1 Subtask - Add frontmatter merge/replace operations.  
+   [x] 2.4.1.1 Subtask - Add frontmatter merge/replace operations.  
    Description: Support partial updates from form controls.
-   [ ] 2.4.1.2 Subtask - Add body replacement and patch application helpers.  
+   [x] 2.4.1.2 Subtask - Add body replacement and patch application helpers.  
    Description: Allow full-text and diff-based update flows.
-   [ ] 2.4.1.3 Subtask - Ensure mutation updates `dirty` and `revision`.  
+   [x] 2.4.1.3 Subtask - Ensure mutation updates `dirty` and `revision`.  
    Description: Keep state change tracking reliable.
 
-  [ ] 2.4.2 Task - Implement canonicalization rules  
+  [x] 2.4.2 Task - Implement canonicalization rules  
   Description: Normalize document output for stable persistence and comparison.
-   [ ] 2.4.2.1 Subtask - Normalize line endings and trailing whitespace policy.  
+   [x] 2.4.2.1 Subtask - Normalize line endings and trailing whitespace policy.  
    Description: Avoid platform-dependent output drift.
-   [ ] 2.4.2.2 Subtask - Normalize frontmatter key ordering policy.  
+   [x] 2.4.2.2 Subtask - Normalize frontmatter key ordering policy.  
    Description: Make serialized output deterministic for review and diffing.
-   [ ] 2.4.2.3 Subtask - Preserve body content fidelity.  
+   [x] 2.4.2.3 Subtask - Preserve body content fidelity.  
    Description: Ensure canonicalization does not alter markdown meaning.
 
  [ ] 2.5 Section - Phase 2 Integration Tests  
