@@ -16,25 +16,25 @@ Back to index: [README](./README.md)
 [ ] 8 Phase 8 - Release, Tooling, and Evolution  
 Description: Finalize production readiness through stable APIs, complete docs, automated releases, and roadmap governance.
 
- [ ] 8.1 Section - Public API Hardening and Stability  
+ [x] 8.1 Section - Public API Hardening and Stability  
  Description: Lock stable interfaces and enforce compatibility discipline.
 
-  [ ] 8.1.1 Task - Finalize and document stable API surface  
+  [x] 8.1.1 Task - Finalize and document stable API surface  
   Description: Define what is public, internal, and deprecated.
-   [ ] 8.1.1.1 Subtask - Review module visibility and public function list.  
+   [x] 8.1.1.1 Subtask - Review module visibility and public function list.  
    Description: Prevent accidental API leakage.
-   [ ] 8.1.1.2 Subtask - Add complete docs and typespecs to public APIs.  
+   [x] 8.1.1.2 Subtask - Add complete docs and typespecs to public APIs.  
    Description: Improve discoverability and correctness expectations.
-   [ ] 8.1.1.3 Subtask - Publish semantic versioning policy.  
+   [x] 8.1.1.3 Subtask - Publish semantic versioning policy.  
    Description: Clarify compatibility guarantees and deprecation windows.
 
-  [ ] 8.1.2 Task - Implement compatibility guardrails  
+  [x] 8.1.2 Task - Implement compatibility guardrails  
   Description: Catch API drift before release.
-   [ ] 8.1.2.1 Subtask - Add API snapshot/golden contract checks.  
+   [x] 8.1.2.1 Subtask - Add API snapshot/golden contract checks.  
    Description: Detect breaking changes automatically.
-   [ ] 8.1.2.2 Subtask - Add backward compatibility integration suite.  
+   [x] 8.1.2.2 Subtask - Add backward compatibility integration suite.  
    Description: Validate behavior against previous minor releases.
-   [ ] 8.1.2.3 Subtask - Define release-blocking criteria.  
+   [x] 8.1.2.3 Subtask - Define release-blocking criteria.  
    Description: Encode hard gates for quality and compatibility.
 
  [ ] 8.2 Section - Documentation, Examples, and Developer Experience  
