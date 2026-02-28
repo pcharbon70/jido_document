@@ -6,6 +6,8 @@ defmodule JidoDocs.Document do
   higher-level parse/update/save workflows.
   """
 
+  alias JidoDocs.Frontmatter
+
   @typedoc "Structured invariant error with field path context."
   @type validation_error :: %{
           path: [atom()],
@@ -56,6 +58,51 @@ defmodule JidoDocs.Document do
     attrs
     |> Enum.into([])
     |> new()
+  end
+
+  @spec parse(String.t(), keyword()) :: {:ok, t()} | {:error, [validation_error()]}
+  def parse(raw_content, opts \\ []) when is_binary(raw_content) and is_list(opts) do
+    with {:ok, %{frontmatter: fm_source, body: body, syntax: syntax}} <-
+           Frontmatter.split(raw_content),
+         {:ok, frontmatter} <- Frontmatter.parse(fm_source, syntax),
+         {:ok, doc} <-
+           new(
+             path: Keyword.get(opts, :path),
+             schema: Keyword.get(opts, :schema),
+             raw: raw_content,
+             body: body,
+             frontmatter: frontmatter,
+             dirty: false,
+             revision: Keyword.get(opts, :revision, 0)
+           ) do
+      {:ok, doc}
+    else
+      {:error, error} when is_map(error) -> {:error, [error]}
+      {:error, errors} when is_list(errors) -> {:error, errors}
+    end
+  end
+
+  @spec serialize(t(), keyword()) :: {:ok, String.t()} | {:error, [validation_error()]}
+  def serialize(%__MODULE__{} = doc, opts \\ []) when is_list(opts) do
+    syntax = Keyword.get(opts, :syntax, :yaml)
+    emit_empty_frontmatter = Keyword.get(opts, :emit_empty_frontmatter, false)
+
+    with {:ok, normalized_doc} <- validate(doc),
+         {:ok, fm_content} <- Frontmatter.serialize(normalized_doc.frontmatter, syntax) do
+      if map_size(normalized_doc.frontmatter) == 0 and not emit_empty_frontmatter do
+        {:ok, normalized_doc.body}
+      else
+        delimiter = Frontmatter.delimiter_for(syntax)
+
+        serialized =
+          delimiter <> "\n" <> fm_content <> "\n" <> delimiter <> "\n" <> normalized_doc.body
+
+        {:ok, serialized}
+      end
+    else
+      {:error, error} when is_map(error) -> {:error, [error]}
+      {:error, errors} when is_list(errors) -> {:error, errors}
+    end
   end
 
   @spec validate(t() | map()) :: {:ok, t()} | {:error, [validation_error()]}
@@ -146,7 +193,7 @@ defmodule JidoDocs.Document do
   defp check_schema(errors, nil), do: errors
 
   defp check_schema(errors, schema) when is_atom(schema) do
-    if function_exported?(schema, :fields, 0) do
+    if Code.ensure_loaded?(schema) and function_exported?(schema, :fields, 0) do
       errors
     else
       [error([:schema], "must export fields/0", schema) | errors]

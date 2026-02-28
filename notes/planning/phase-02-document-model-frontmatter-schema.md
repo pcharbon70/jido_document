@@ -37,25 +37,25 @@ Description: Build the canonical document representation with deterministic pars
    [x] 2.1.2.3 Subtask - Add invariant guard entrypoints.  
    Description: Reuse checks across parse, update, and save flows.
 
- [ ] 2.2 Section - Frontmatter Parsing and Serialization  
+ [x] 2.2 Section - Frontmatter Parsing and Serialization  
  Description: Implement robust handling for delimiter detection, parse, and roundtrip output.
 
-  [ ] 2.2.1 Task - Implement frontmatter splitting and syntax detection  
+  [x] 2.2.1 Task - Implement frontmatter splitting and syntax detection  
   Description: Reliably separate frontmatter and markdown body content.
-   [ ] 2.2.1.1 Subtask - Detect YAML/TOML delimiters at file start.  
+   [x] 2.2.1.1 Subtask - Detect YAML/TOML delimiters at file start.  
    Description: Avoid false positives for delimiter-like body text.
-   [ ] 2.2.1.2 Subtask - Handle files without frontmatter.  
+   [x] 2.2.1.2 Subtask - Handle files without frontmatter.  
    Description: Return empty metadata map and preserve body content.
-   [ ] 2.2.1.3 Subtask - Handle malformed delimiter scenarios.  
+   [x] 2.2.1.3 Subtask - Handle malformed delimiter scenarios.  
    Description: Return parse errors with location context.
 
-  [ ] 2.2.2 Task - Implement frontmatter parse and serialize pipeline  
+  [x] 2.2.2 Task - Implement frontmatter parse and serialize pipeline  
   Description: Support deterministic map conversion and output generation.
-   [ ] 2.2.2.1 Subtask - Parse YAML/TOML strings into maps via adapters.  
+   [x] 2.2.2.1 Subtask - Parse YAML/TOML strings into maps via adapters.  
    Description: Normalize parser output to a stable internal shape.
-   [ ] 2.2.2.2 Subtask - Serialize maps with consistent formatting rules.  
+   [x] 2.2.2.2 Subtask - Serialize maps with consistent formatting rules.  
    Description: Produce stable text output for repeatable diffs.
-   [ ] 2.2.2.3 Subtask - Implement parse/serialize roundtrip checks.  
+   [x] 2.2.2.3 Subtask - Implement parse/serialize roundtrip checks.  
    Description: Ensure no silent loss of supported metadata fields.
 
  [ ] 2.3 Section - Schema and Field Definition System  
