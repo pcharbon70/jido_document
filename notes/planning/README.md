@@ -1,0 +1,60 @@
+# JidoDocs Planning Index
+
+This directory contains the phase-by-phase implementation plan for `JidoDocs`, an agent-oriented document editing system built on top of Jido.
+
+## Phase Files
+1. [Phase 1 - Foundation and Core Integration](./phase-01-foundation-and-core-integration.md): Establish project skeleton, runtime contracts, and dependency boundaries.
+2. [Phase 2 - Document Model, Frontmatter, and Schema](./phase-02-document-model-frontmatter-schema.md): Implement core document representation, parsing, serialization, and schema validation.
+3. [Phase 3 - Actions, Signals, and Agent Session Lifecycle](./phase-03-actions-signals-agent-session-lifecycle.md): Build action verbs, event contracts, and stateful session orchestration.
+4. [Phase 4 - Markdown Rendering, Preview, and Change Propagation](./phase-04-markdown-rendering-preview-change-propagation.md): Deliver high-performance rendering and robust preview update flows.
+5. [Phase 5 - Interface Adapters and Session Coordination](./phase-05-interface-adapters-session-coordination.md): Integrate LiveView, TUI, and Desktop adapters on a shared session control plane.
+6. [Phase 6 - Persistence, History, Versioning, and Recovery](./phase-06-persistence-history-versioning-recovery.md): Add safe persistence, undo/redo, revisioning, and crash recovery.
+7. [Phase 7 - Governance, Security, and Operational Reliability](./phase-07-governance-security-operational-reliability.md): Harden access control, data safety, observability, and fault tolerance.
+8. [Phase 8 - Release, Tooling, and Evolution](./phase-08-release-tooling-evolution.md): Finalize API stability, documentation, release automation, and extension roadmap.
+
+## Shared Conventions
+- Numbering:
+  - Phases: `N`
+  - Sections: `N.M`
+  - Tasks: `N.M.K`
+  - Subtasks: `N.M.K.L`
+- Tracking:
+  - Every phase, section, task, and subtask uses Markdown checkboxes (`[ ]`).
+- Description requirement:
+  - Every phase, section, and task starts with a `Description:` line.
+- Integration-test requirement:
+  - Each phase ends with a final Integration Tests section.
+
+## Shared API / Interface Contract
+- `JidoDocs.Document`:
+  - `parse/2`, `serialize/1`, `validate/2`, `mark_dirty/1`
+- `JidoDocs.Schema` and `JidoDocs.Field`:
+  - Schema-driven field contracts for frontmatter rendering and validation.
+- `JidoDocs.Actions.*`:
+  - `Load`, `Save`, `UpdateFrontmatter`, `UpdateBody`, `Render`.
+- `JidoDocs.Agent`:
+  - Stateful session process coordinating actions, history, and signals.
+- `JidoDocs.Renderer`:
+  - Markdown-to-HTML/AST pipeline with diagnostics.
+- `JidoDocs.Signal` event taxonomy:
+  - `jido_docs/document/loaded`, `updated`, `saved`, `rendered`, `failed`.
+- `JidoDocs.SessionRegistry`:
+  - Session lookup, ownership, and transport coordination.
+
+## Shared Assumptions and Defaults
+- `jido`, `jido_action`, and `jido_signal` are used as orchestration and eventing primitives.
+- `mdex` is the default markdown renderer.
+- Frontmatter supports YAML (`---`) and TOML (`+++`) delimiters.
+- API return pattern is `{:ok, value} | {:error, reason}`.
+- Save path defaults to atomic writes with rollback-safe temporary files.
+- Preview rendering defaults to async mode with debounce.
+
+## Cross-Phase Acceptance Scenarios
+- [ ] X-1 Description: A document with schema-driven frontmatter can be loaded, edited from multiple adapters, and saved without data loss.
+- [ ] X-2 Description: Concurrent updates from two clients resolve deterministically with explicit conflict signaling.
+- [ ] X-3 Description: Rendering failures degrade gracefully while preserving the last known good preview.
+- [ ] X-4 Description: Undo/redo remains coherent across frontmatter and body edits through save/reload cycles.
+- [ ] X-5 Description: External file mutations are detected and handled without silent overwrite.
+- [ ] X-6 Description: Unauthorized workspace or path access is rejected and fully audited.
+- [ ] X-7 Description: Crash/restart during autosave and render jobs recovers session state without corruption.
+- [ ] X-8 Description: Release artifacts, docs, and examples remain reproducible across supported Elixir/OTP versions.
