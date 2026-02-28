@@ -61,25 +61,25 @@ Description: Build atomic operation verbs, stable event contracts, and reliable 
    [x] 3.2.2.3 Subtask - Implement `Render` action integration.  
    Description: Return HTML/TOC/diagnostics payloads for preview updates.
 
- [ ] 3.3 Section - Signal Taxonomy and Subscription Model  
+ [x] 3.3 Section - Signal Taxonomy and Subscription Model  
  Description: Define and implement predictable event fanout for UI synchronization.
 
-  [ ] 3.3.1 Task - Define signal types and payload schemas  
+  [x] 3.3.1 Task - Define signal types and payload schemas  
   Description: Ensure adapters can reliably consume session events.
-   [ ] 3.3.1.1 Subtask - Define loaded/updated/saved/rendered/failed event shapes.  
+   [x] 3.3.1.1 Subtask - Define loaded/updated/saved/rendered/failed event shapes.  
    Description: Include document revision and session identifiers.
-   [ ] 3.3.1.2 Subtask - Version event payload schema.  
+   [x] 3.3.1.2 Subtask - Version event payload schema.  
    Description: Allow backward-compatible event evolution.
-   [ ] 3.3.1.3 Subtask - Define payload size and truncation policy.  
+   [x] 3.3.1.3 Subtask - Define payload size and truncation policy.  
    Description: Prevent oversized event messages from destabilizing transports.
 
-  [ ] 3.3.2 Task - Implement subscription lifecycle and fanout behavior  
+  [x] 3.3.2 Task - Implement subscription lifecycle and fanout behavior  
   Description: Manage subscribers, backpressure, and cleanup.
-   [ ] 3.3.2.1 Subtask - Implement scoped topics by session.  
+   [x] 3.3.2.1 Subtask - Implement scoped topics by session.  
    Description: Isolate event streams across concurrent sessions.
-   [ ] 3.3.2.2 Subtask - Implement backpressure and dropped-event policy.  
+   [x] 3.3.2.2 Subtask - Implement backpressure and dropped-event policy.  
    Description: Define best-effort vs guaranteed delivery tradeoffs.
-   [ ] 3.3.2.3 Subtask - Implement dead-subscriber cleanup.  
+   [x] 3.3.2.3 Subtask - Implement dead-subscriber cleanup.  
    Description: Remove stale listeners and report cleanup events.
 
  [ ] 3.4 Section - Agent State and Session Lifecycle  
