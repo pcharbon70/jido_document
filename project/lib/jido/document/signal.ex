@@ -1,6 +1,6 @@
 defmodule Jido.Document.Signal do
   @moduledoc """
-  Versioned signal contract for cross-adapter session synchronization.
+  Versioned signal contract for cross-client session synchronization.
   """
 
   alias Jido.Document.Error

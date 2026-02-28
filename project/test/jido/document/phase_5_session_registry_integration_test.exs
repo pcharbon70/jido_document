@@ -68,30 +68,29 @@ defmodule Jido.Document.Phase5SessionRegistryIntegrationTest do
     assert {:ok, _info} = SessionRegistry.ensure_session(ctx.registry, session_id)
     assert :ok = SignalBus.subscribe(ctx.signal_bus, session_id, pid: self())
 
-    assert {:ok, lock} = SessionRegistry.acquire_lock(ctx.registry, session_id, "liveview-client")
+    assert {:ok, lock} = SessionRegistry.acquire_lock(ctx.registry, session_id, "client-a")
     assert is_binary(lock.lock_token)
     assert lock.lock_revision == 1
-    assert lock.owner == "liveview-client"
+    assert lock.owner == "client-a"
 
     assert_receive {:jido_document_signal,
                     %Signal{
                       type: :updated,
                       session_id: ^session_id,
-                      data: %{action: :lock_state, payload: %{owner: "liveview-client"}}
+                      data: %{action: :lock_state, payload: %{owner: "client-a"}}
                     }},
                    500
 
     assert :ok = SessionRegistry.validate_lock(ctx.registry, session_id, lock.lock_token)
 
-    assert {:error, conflict} =
-             SessionRegistry.acquire_lock(ctx.registry, session_id, "tui-client")
+    assert {:error, conflict} = SessionRegistry.acquire_lock(ctx.registry, session_id, "client-b")
 
     assert conflict.code == :conflict
-    assert conflict.details.owner == "liveview-client"
-    assert conflict.details.requested_owner == "tui-client"
+    assert conflict.details.owner == "client-a"
+    assert conflict.details.requested_owner == "client-b"
 
     assert {:error, stale} =
-             SessionRegistry.acquire_lock(ctx.registry, session_id, "liveview-client",
+             SessionRegistry.acquire_lock(ctx.registry, session_id, "client-a",
                expected_token: "stale-token"
              )
 
@@ -99,12 +98,12 @@ defmodule Jido.Document.Phase5SessionRegistryIntegrationTest do
     assert stale.details.expected_token == "stale-token"
 
     assert {:ok, takeover} =
-             SessionRegistry.force_takeover(ctx.registry, session_id, "desktop-client",
+             SessionRegistry.force_takeover(ctx.registry, session_id, "client-c",
                reason: "stuck owner"
              )
 
-    assert takeover.owner == "desktop-client"
-    assert takeover.previous_owner == "liveview-client"
+    assert takeover.owner == "client-c"
+    assert takeover.previous_owner == "client-a"
     assert takeover.lock_revision == 2
     refute takeover.lock_token == lock.lock_token
 

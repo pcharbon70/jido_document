@@ -35,7 +35,7 @@ Description: Deliver durable persistence semantics, coherent edit history, and r
    [ ] 6.1.2.2 Subtask - Block unsafe overwrite when divergence detected.  
    Description: Return explicit conflict reason and remediation options.
    [ ] 6.1.2.3 Subtask - Add merge strategy hook points.  
-   Description: Allow custom conflict handlers by adapter or policy.
+   Description: Allow custom conflict handlers by integration policy.
 
  [ ] 6.2 Section - Undo/Redo History Model  
  Description: Preserve reversible edit operations with bounded resource usage.
@@ -56,7 +56,7 @@ Description: Deliver durable persistence semantics, coherent edit history, and r
    [ ] 6.2.2.2 Subtask - Implement reversible body operations.  
    Description: Support patch-based and full-replacement reversal.
    [ ] 6.2.2.3 Subtask - Emit history state signals.  
-   Description: Inform adapters when undo/redo availability changes.
+   Description: Inform subscribers when undo/redo availability changes.
 
  [ ] 6.3 Section - Autosave and Checkpoint Recovery  
  Description: Minimize data loss from process crashes or interruptions.
@@ -75,7 +75,7 @@ Description: Deliver durable persistence semantics, coherent edit history, and r
    [ ] 6.3.2.1 Subtask - Detect orphan checkpoints on startup.  
    Description: Surface pending recovery candidates.
    [ ] 6.3.2.2 Subtask - Provide recover/discard decision API.  
-   Description: Let adapters drive explicit recovery choices.
+   Description: Let consumers drive explicit recovery choices.
    [ ] 6.3.2.3 Subtask - Reconcile recovered state with current disk content.  
    Description: Prevent accidental loss when disk changed after crash.
 
@@ -87,7 +87,7 @@ Description: Deliver durable persistence semantics, coherent edit history, and r
    [ ] 6.4.1.1 Subtask - Generate monotonic revision identifiers per session.  
    Description: Enable deterministic ordering for updates and signals.
    [ ] 6.4.1.2 Subtask - Attach actor/source metadata to revisions.  
-   Description: Improve traceability across adapters.
+   Description: Improve traceability across integration sources.
    [ ] 6.4.1.3 Subtask - Persist revision metadata in save outputs or sidecars.  
    Description: Support long-running audit and merge workflows.
 

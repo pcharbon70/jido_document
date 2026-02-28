@@ -13,7 +13,7 @@ Back to index: [README](./README.md)
 
 ## Relevant Assumptions / Defaults
 - Actions are atomic and composable.
-- Signals are the primary synchronization channel to UI adapters.
+- Signals are the primary synchronization channel to external consumers.
 - Agent is the source of truth for in-session document state.
 
 [x] 3 Phase 3 - Actions, Signals, and Agent Session Lifecycle  
@@ -36,7 +36,7 @@ Description: Build atomic operation verbs, stable event contracts, and reliable 
    [x] 3.1.2.1 Subtask - Define canonical reason codes.  
    Description: Map failures to stable machine-readable atoms.
    [x] 3.1.2.2 Subtask - Attach human-readable diagnostics.  
-   Description: Include context that adapters can display directly.
+   Description: Include context that consumers can display directly.
    [x] 3.1.2.3 Subtask - Build error conversion helpers.  
    Description: Translate upstream exceptions into domain errors.
 
@@ -62,10 +62,10 @@ Description: Build atomic operation verbs, stable event contracts, and reliable 
    Description: Return HTML/TOC/diagnostics payloads for preview updates.
 
  [x] 3.3 Section - Signal Taxonomy and Subscription Model  
- Description: Define and implement predictable event fanout for UI synchronization.
+ Description: Define and implement predictable event fanout for session synchronization.
 
   [x] 3.3.1 Task - Define signal types and payload schemas  
-  Description: Ensure adapters can reliably consume session events.
+  Description: Ensure consumers can reliably consume session events.
    [x] 3.3.1.1 Subtask - Define loaded/updated/saved/rendered/failed event shapes.  
    Description: Include document revision and session identifiers.
    [x] 3.3.1.2 Subtask - Version event payload schema.  
@@ -88,7 +88,7 @@ Description: Build atomic operation verbs, stable event contracts, and reliable 
   [x] 3.4.1 Task - Implement `Jido.Document.Agent` state model and initialization  
   Description: Represent active document session state with history and preview metadata.
    [x] 3.4.1.1 Subtask - Define state fields (`document`, `preview`, `history`, `subscribers`, `locks`).  
-   Description: Support editing, rendering, and multi-adapter coordination.
+   Description: Support editing, rendering, and multi-client coordination.
    [x] 3.4.1.2 Subtask - Implement init and optional auto-load flow.  
    Description: Allow session boot from empty or file-backed states.
    [x] 3.4.1.3 Subtask - Implement graceful termination behavior.  
@@ -97,7 +97,7 @@ Description: Build atomic operation verbs, stable event contracts, and reliable 
   [x] 3.4.2 Task - Implement command handling and orchestration logic  
   Description: Sequence actions safely under concurrent edits and render requests.
    [x] 3.4.2.1 Subtask - Implement synchronous vs asynchronous command routing.  
-   Description: Keep UI responsiveness while protecting data integrity.
+   Description: Keep client responsiveness while protecting data integrity.
    [x] 3.4.2.2 Subtask - Add concurrency guards around save/render/update overlap.  
    Description: Prevent stale writes and out-of-order preview states.
    [x] 3.4.2.3 Subtask - Add optimistic-update rollback strategy.  
@@ -109,11 +109,11 @@ Description: Build atomic operation verbs, stable event contracts, and reliable 
   [x] 3.5.1 Task - Action and signal integration tests  
   Description: Confirm that action execution emits expected event sequences.
    [x] 3.5.1.1 Subtask - Verify load/update/save signal order.  
-   Description: Ensure deterministic events for adapter consumers.
+   Description: Ensure deterministic events for signal consumers.
    [x] 3.5.1.2 Subtask - Verify failed action event payloads.  
    Description: Confirm diagnostic completeness and reason codes.
    [x] 3.5.1.3 Subtask - Verify event schema version consistency.  
-   Description: Ensure adapters can parse expected payload versions.
+   Description: Ensure consumers can parse expected payload versions.
 
   [x] 3.5.2 Task - Session lifecycle and concurrency tests  
   Description: Validate behavior under parallel edits and process restarts.

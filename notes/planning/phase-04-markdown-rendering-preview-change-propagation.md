@@ -22,14 +22,14 @@ Description: Deliver high-quality markdown rendering with performant, reliable p
   [x] 4.1.1 Task - Implement `Jido.Document.Renderer` pipeline with `Mdex`  
   Description: Convert markdown body into HTML and structured preview artifacts.
    [x] 4.1.1.1 Subtask - Configure default markdown extensions and parsing options.  
-   Description: Ensure predictable markdown feature support across adapters.
+   Description: Ensure predictable markdown feature support across integration consumers.
    [x] 4.1.1.2 Subtask - Integrate syntax-highlighting plugin path.  
    Description: Render fenced code blocks with configurable themes.
    [x] 4.1.1.3 Subtask - Exclude frontmatter from preview rendering.  
    Description: Keep metadata editing isolated from body presentation.
 
   [x] 4.1.2 Task - Define renderer output schema  
-  Description: Standardize payload format for adapter consumption.
+  Description: Standardize payload format for consumer integration.
    [x] 4.1.2.1 Subtask - Include `html`, `toc`, and `diagnostics` fields.  
    Description: Provide full preview context to clients.
    [x] 4.1.2.2 Subtask - Add stable heading IDs and anchor metadata.  
@@ -66,7 +66,7 @@ Description: Deliver high-quality markdown rendering with performant, reliable p
    [x] 4.3.1.1 Subtask - Map renderer warnings to severity levels.  
    Description: Distinguish informational, warning, and blocking issues.
    [x] 4.3.1.2 Subtask - Include source locations where available.  
-   Description: Help adapters highlight problematic ranges.
+   Description: Help consumers highlight problematic ranges.
    [x] 4.3.1.3 Subtask - Attach remediation hints for common failures.  
    Description: Speed debugging for malformed markdown.
 
@@ -77,7 +77,7 @@ Description: Deliver high-quality markdown rendering with performant, reliable p
    [x] 4.3.2.2 Subtask - Add safe plain-markdown fallback output.  
    Description: Provide minimal preview for unsupported constructs.
    [x] 4.3.2.3 Subtask - Add failure event and recovery signals.  
-   Description: Inform adapters when fallback mode is active.
+   Description: Inform subscribers when fallback mode is active.
 
  [x] 4.4 Section - Extensibility and Content Feature Support  
  Description: Prepare rendering pipeline for future plugin and feature growth.
@@ -85,7 +85,7 @@ Description: Deliver high-quality markdown rendering with performant, reliable p
   [x] 4.4.1 Task - Implement theme and code-language abstraction  
   Description: Support configurable syntax highlighting without tight coupling.
    [x] 4.4.1.1 Subtask - Add renderer theme registry abstraction.  
-   Description: Allow theme switching by adapter or user setting.
+   Description: Allow theme switching by consumer preference or policy.
    [x] 4.4.1.2 Subtask - Handle unsupported language identifiers.  
    Description: Fall back to plaintext rendering deterministically.
    [x] 4.4.1.3 Subtask - Add large code-block performance safeguards.  

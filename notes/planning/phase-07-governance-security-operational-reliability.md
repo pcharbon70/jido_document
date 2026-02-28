@@ -53,8 +53,8 @@ Description: Harden the system with policy controls, auditable behavior, and res
   Description: Link persisted output to edit history and source operations.
    [ ] 7.2.2.1 Subtask - Attach operation lineage to revisions.  
    Description: Preserve causality between edits and saved state.
-   [ ] 7.2.2.2 Subtask - Include adapter/source annotations in change records.  
-   Description: Distinguish updates from LiveView, TUI, and Desktop.
+   [ ] 7.2.2.2 Subtask - Include source annotations in change records.  
+   Description: Distinguish updates from API, automation, and background processes.
    [ ] 7.2.2.3 Subtask - Provide trace export helper for incident debugging.  
    Description: Support compact reproducible incident bundles.
 
@@ -66,14 +66,14 @@ Description: Harden the system with policy controls, auditable behavior, and res
    [ ] 7.3.1.1 Subtask - Add configurable regex/ruleset scanner.  
    Description: Support baseline secret and token detection use cases.
    [ ] 7.3.1.2 Subtask - Annotate findings with severity and location.  
-   Description: Enable adapter-level warning presentation.
+   Description: Enable consumer-level warning presentation.
    [ ] 7.3.1.3 Subtask - Allow custom detector plugin integration.  
    Description: Support domain-specific content safety policies.
 
   [ ] 7.3.2 Task - Implement redaction and masking workflow  
   Description: Apply policy-driven transformations for preview and export contexts.
    [ ] 7.3.2.1 Subtask - Mask sensitive values in rendered previews.  
-   Description: Prevent accidental exposure in shared UI views.
+   Description: Prevent accidental exposure in shared outputs.
    [ ] 7.3.2.2 Subtask - Add policy exceptions and approvals path.  
    Description: Permit explicit override in controlled contexts.
    [ ] 7.3.2.3 Subtask - Preserve secure raw access path for authorized operations.  
