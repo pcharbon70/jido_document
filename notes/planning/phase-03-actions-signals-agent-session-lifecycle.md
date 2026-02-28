@@ -82,25 +82,25 @@ Description: Build atomic operation verbs, stable event contracts, and reliable 
    [x] 3.3.2.3 Subtask - Implement dead-subscriber cleanup.  
    Description: Remove stale listeners and report cleanup events.
 
- [ ] 3.4 Section - Agent State and Session Lifecycle  
+ [x] 3.4 Section - Agent State and Session Lifecycle  
  Description: Build a resilient stateful session process that orchestrates actions and events.
 
-  [ ] 3.4.1 Task - Implement `JidoDocs.Agent` state model and initialization  
+  [x] 3.4.1 Task - Implement `JidoDocs.Agent` state model and initialization  
   Description: Represent active document session state with history and preview metadata.
-   [ ] 3.4.1.1 Subtask - Define state fields (`document`, `preview`, `history`, `subscribers`, `locks`).  
+   [x] 3.4.1.1 Subtask - Define state fields (`document`, `preview`, `history`, `subscribers`, `locks`).  
    Description: Support editing, rendering, and multi-adapter coordination.
-   [ ] 3.4.1.2 Subtask - Implement init and optional auto-load flow.  
+   [x] 3.4.1.2 Subtask - Implement init and optional auto-load flow.  
    Description: Allow session boot from empty or file-backed states.
-   [ ] 3.4.1.3 Subtask - Implement graceful termination behavior.  
+   [x] 3.4.1.3 Subtask - Implement graceful termination behavior.  
    Description: Flush checkpoints and emit session-closed signal.
 
-  [ ] 3.4.2 Task - Implement command handling and orchestration logic  
+  [x] 3.4.2 Task - Implement command handling and orchestration logic  
   Description: Sequence actions safely under concurrent edits and render requests.
-   [ ] 3.4.2.1 Subtask - Implement synchronous vs asynchronous command routing.  
+   [x] 3.4.2.1 Subtask - Implement synchronous vs asynchronous command routing.  
    Description: Keep UI responsiveness while protecting data integrity.
-   [ ] 3.4.2.2 Subtask - Add concurrency guards around save/render/update overlap.  
+   [x] 3.4.2.2 Subtask - Add concurrency guards around save/render/update overlap.  
    Description: Prevent stale writes and out-of-order preview states.
-   [ ] 3.4.2.3 Subtask - Add optimistic-update rollback strategy.  
+   [x] 3.4.2.3 Subtask - Add optimistic-update rollback strategy.  
    Description: Reconcile failed actions without corrupting session state.
 
  [ ] 3.5 Section - Phase 3 Integration Tests  
