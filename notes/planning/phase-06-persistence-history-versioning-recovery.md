@@ -37,25 +37,25 @@ Description: Deliver durable persistence semantics, coherent edit history, and r
    [x] 6.1.2.3 Subtask - Add merge strategy hook points.  
    Description: Allow custom conflict handlers by integration policy.
 
- [ ] 6.2 Section - Undo/Redo History Model  
+ [x] 6.2 Section - Undo/Redo History Model  
  Description: Preserve reversible edit operations with bounded resource usage.
 
-  [ ] 6.2.1 Task - Define history data model and limits  
+  [x] 6.2.1 Task - Define history data model and limits  
   Description: Represent reversible operations and snapshots efficiently.
-   [ ] 6.2.1.1 Subtask - Choose operation-log vs snapshot hybrid strategy.  
+   [x] 6.2.1.1 Subtask - Choose operation-log vs snapshot hybrid strategy.  
    Description: Balance memory cost and replay speed.
-   [ ] 6.2.1.2 Subtask - Define bounded history retention policy.  
+   [x] 6.2.1.2 Subtask - Define bounded history retention policy.  
    Description: Cap memory usage without breaking expected UX.
-   [ ] 6.2.1.3 Subtask - Define branch behavior after undo + new edit.  
+   [x] 6.2.1.3 Subtask - Define branch behavior after undo + new edit.  
    Description: Ensure deterministic redo invalidation rules.
 
-  [ ] 6.2.2 Task - Implement undo/redo command handling  
+  [x] 6.2.2 Task - Implement undo/redo command handling  
   Description: Apply and reverse frontmatter/body operations reliably.
-   [ ] 6.2.2.1 Subtask - Implement reversible frontmatter operations.  
+   [x] 6.2.2.1 Subtask - Implement reversible frontmatter operations.  
    Description: Support merge, replace, and key delete reversal.
-   [ ] 6.2.2.2 Subtask - Implement reversible body operations.  
+   [x] 6.2.2.2 Subtask - Implement reversible body operations.  
    Description: Support patch-based and full-replacement reversal.
-   [ ] 6.2.2.3 Subtask - Emit history state signals.  
+   [x] 6.2.2.3 Subtask - Emit history state signals.  
    Description: Inform subscribers when undo/redo availability changes.
 
  [ ] 6.3 Section - Autosave and Checkpoint Recovery  

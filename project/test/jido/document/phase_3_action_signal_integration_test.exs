@@ -31,19 +31,31 @@ defmodule Jido.Document.Phase3ActionSignalIntegrationTest do
     fs_opts = [context_options: %{workspace_root: "/"}]
 
     assert %{status: :ok} = Agent.command(ctx.agent, :load, %{path: ctx.source_path}, fs_opts)
-    assert_receive {:jido_document_signal, %Signal{type: loaded, session_id: ^session_id}}, 500
+    assert_receive {:jido_document_signal, %Signal{type: :loaded, session_id: ^session_id}}, 500
 
     assert %{status: :ok} = Agent.command(ctx.agent, :update_body, %{body: "# Updated\n"})
-    assert_receive {:jido_document_signal, %Signal{type: updated, session_id: ^session_id}}, 500
+
+    assert_receive {:jido_document_signal,
+                    %Signal{
+                      type: :updated,
+                      session_id: ^session_id,
+                      data: %{action: :update_body}
+                    }},
+                   500
+
+    assert_receive {:jido_document_signal,
+                    %Signal{
+                      type: :updated,
+                      session_id: ^session_id,
+                      data: %{action: :history_state}
+                    }},
+                   500
 
     assert %{status: :ok} = Agent.command(ctx.agent, :render, %{})
-    assert_receive {:jido_document_signal, %Signal{type: rendered, session_id: ^session_id}}, 500
+    assert_receive {:jido_document_signal, %Signal{type: :rendered, session_id: ^session_id}}, 500
 
     assert %{status: :ok} = Agent.command(ctx.agent, :save, %{path: ctx.save_path}, fs_opts)
-    assert_receive {:jido_document_signal, %Signal{type: saved, session_id: ^session_id}}, 500
-
-    types = [loaded, updated, rendered, saved]
-    assert types == [:loaded, :updated, :rendered, :saved]
+    assert_receive {:jido_document_signal, %Signal{type: :saved, session_id: ^session_id}}, 500
   end
 
   test "failed action emits failed signal with structured diagnostics", ctx do

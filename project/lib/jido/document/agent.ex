@@ -11,9 +11,12 @@ defmodule Jido.Document.Agent do
 
   alias Jido.Document.Action
   alias Jido.Document.Action.Result
-  alias Jido.Document.{Document, Error, SignalBus}
+  alias Jido.Document.{Document, Error, History, SignalBus}
 
-  @type action_name :: :load | :save | :update_frontmatter | :update_body | :render
+  @supported_actions [:load, :save, :update_frontmatter, :update_body, :render, :undo, :redo]
+
+  @type action_name ::
+          :load | :save | :update_frontmatter | :update_body | :render | :undo | :redo
 
   @type history_entry :: %{
           action: action_name(),
@@ -26,6 +29,7 @@ defmodule Jido.Document.Agent do
           session_id: String.t(),
           document: Document.t() | nil,
           disk_snapshot: map() | nil,
+          history_model: History.t(),
           preview: map() | nil,
           last_good_preview: map() | nil,
           render_fallback_active: boolean(),
@@ -38,6 +42,7 @@ defmodule Jido.Document.Agent do
   defstruct session_id: nil,
             document: nil,
             disk_snapshot: nil,
+            history_model: %History{},
             preview: nil,
             last_good_preview: nil,
             render_fallback_active: false,
@@ -83,8 +88,13 @@ defmodule Jido.Document.Agent do
   def init(opts) do
     session_id = Keyword.get(opts, :session_id, default_session_id())
     signal_bus = Keyword.get(opts, :signal_bus, SignalBus)
+    history_limit = Keyword.get(opts, :history_limit, 100)
 
-    state = %__MODULE__{session_id: session_id, signal_bus: signal_bus}
+    state = %__MODULE__{
+      session_id: session_id,
+      signal_bus: signal_bus,
+      history_model: History.new(limit: history_limit)
+    }
 
     auto_load_path = Keyword.get(opts, :path)
 
@@ -153,68 +163,14 @@ defmodule Jido.Document.Agent do
       previous_state = state
       state = lock_if_needed(state, action)
 
-      context = %{
-        session_id: state.session_id,
-        path: Map.get(params, :path),
-        document: Map.get(params, :document, state.document),
-        options: Map.get(opts, :context_options, %{}),
-        correlation_id: Map.get(opts, :correlation_id),
-        idempotency_key: Map.get(opts, :idempotency_key),
-        metadata: %{action: action}
-      }
+      {result, next_state} =
+        if action in [:undo, :redo] do
+          execute_history_command(state, action, opts)
+        else
+          execute_action_command(state, previous_state, action, params, opts)
+        end
 
-      result = Action.execute(action_module(action), params, context)
-
-      case result do
-        %Result{status: :ok, value: value} = ok_result ->
-          next_state =
-            state
-            |> apply_success(action, value, ok_result.metadata)
-            |> unlock_if_needed(action)
-
-          {ok_result, next_state}
-
-        %Result{status: :error, error: error} = error_result ->
-          if action == :render do
-            fallback_value = %{
-              preview: choose_fallback_preview(state, error),
-              revision: current_revision(state),
-              document: state.document
-            }
-
-            recovered_state =
-              state
-              |> unlock_if_needed(action)
-              |> apply_failure(action, error, error_result.metadata, true)
-
-            next_state =
-              apply_success(
-                recovered_state,
-                :render,
-                fallback_value,
-                Map.put(error_result.metadata, :fallback, true)
-              )
-
-            {Result.ok(fallback_value, Map.put(error_result.metadata, :fallback, true)),
-             next_state}
-          else
-            rollback? = Map.get(opts, :optimistic, true)
-
-            recovered_state =
-              if rollback? and action in [:update_frontmatter, :update_body] do
-                previous_state
-              else
-                state
-              end
-
-            next_state =
-              recovered_state
-              |> unlock_if_needed(action)
-              |> apply_failure(action, error, error_result.metadata, rollback?)
-
-            {error_result, next_state}
-          end
-      end
+      {result, unlock_if_needed(next_state, action)}
     else
       {:error, %Error{} = error} ->
         result = Result.error(error, %{action: action, session_id: state.session_id})
@@ -222,8 +178,133 @@ defmodule Jido.Document.Agent do
     end
   end
 
+  defp execute_action_command(state, previous_state, action, params, opts) do
+    context = %{
+      session_id: state.session_id,
+      path: Map.get(params, :path),
+      document: Map.get(params, :document, state.document),
+      options: Map.get(opts, :context_options, %{}),
+      correlation_id: Map.get(opts, :correlation_id),
+      idempotency_key: Map.get(opts, :idempotency_key),
+      metadata: %{action: action}
+    }
+
+    result = Action.execute(action_module(action), params, context)
+
+    case result do
+      %Result{status: :ok, value: value} = ok_result ->
+        next_state = apply_success(state, action, value, ok_result.metadata)
+        {ok_result, next_state}
+
+      %Result{status: :error, error: error} = error_result ->
+        if action == :render do
+          fallback_value = %{
+            preview: choose_fallback_preview(state, error),
+            revision: current_revision(state),
+            document: state.document
+          }
+
+          recovered_state =
+            apply_failure(state, action, error, error_result.metadata, true)
+
+          next_state =
+            apply_success(
+              recovered_state,
+              :render,
+              fallback_value,
+              Map.put(error_result.metadata, :fallback, true)
+            )
+
+          {Result.ok(fallback_value, Map.put(error_result.metadata, :fallback, true)), next_state}
+        else
+          rollback? = Map.get(opts, :optimistic, true)
+
+          recovered_state =
+            if rollback? and action in [:update_frontmatter, :update_body] do
+              previous_state
+            else
+              state
+            end
+
+          next_state =
+            apply_failure(recovered_state, action, error, error_result.metadata, rollback?)
+
+          {error_result, next_state}
+        end
+    end
+  end
+
+  defp execute_history_command(state, action, opts) do
+    started = System.monotonic_time(:microsecond)
+    correlation_id = Map.get(opts, :correlation_id, default_correlation_id())
+    metadata = history_command_metadata(action, correlation_id, opts)
+
+    cond do
+      state.document == nil ->
+        error =
+          Error.new(:invalid_params, "#{action} requires a loaded document", %{action: action})
+
+        metadata = finish_history_metadata(metadata, started)
+        {Result.error(error, metadata), apply_failure(state, action, error, metadata, false)}
+
+      true ->
+        execute_history_transition(state, action, metadata, started)
+    end
+  end
+
+  defp execute_history_transition(state, action, metadata, started) do
+    result =
+      case action do
+        :undo -> History.undo(state.history_model, state.document)
+        :redo -> History.redo(state.history_model, state.document)
+      end
+
+    metadata = finish_history_metadata(metadata, started)
+
+    case result do
+      {:ok, document, history_model} ->
+        value = %{
+          document: document,
+          history_model: history_model,
+          history: History.state(history_model),
+          revision: document.revision
+        }
+
+        ok_result = Result.ok(value, metadata)
+        next_state = apply_success(state, action, value, metadata)
+        {ok_result, next_state}
+
+      {:error, :empty} ->
+        error =
+          Error.new(:conflict, "#{action} unavailable", %{
+            action: action,
+            history: History.state(state.history_model)
+          })
+
+        error_result = Result.error(error, metadata)
+        next_state = apply_failure(state, action, error, metadata, false)
+        {error_result, next_state}
+    end
+  end
+
+  defp history_command_metadata(action, correlation_id, opts) do
+    %{
+      action: action,
+      idempotency: :conditionally_idempotent,
+      correlation_id: correlation_id
+    }
+    |> maybe_put(:idempotency_key, Map.get(opts, :idempotency_key))
+  end
+
+  defp finish_history_metadata(metadata, started) do
+    Map.put(metadata, :duration_us, System.monotonic_time(:microsecond) - started)
+  end
+
   defp guard_action(state, action) do
     cond do
+      action not in @supported_actions ->
+        {:error, Error.new(:invalid_params, "unknown action", %{action: action})}
+
       action == :save and locked?(state, :save) ->
         {:error, Error.new(:busy, "save already in progress", %{action: action})}
 
@@ -233,7 +314,7 @@ defmodule Jido.Document.Agent do
       action == :render and locked?(state, :render) ->
         {:error, Error.new(:busy, "render already in progress", %{action: action})}
 
-      action in [:update_frontmatter, :update_body] and locked?(state, :save) ->
+      action in [:update_frontmatter, :update_body, :undo, :redo] and locked?(state, :save) ->
         {:error, Error.new(:busy, "save lock prevents update", %{action: action})}
 
       true ->
@@ -243,6 +324,7 @@ defmodule Jido.Document.Agent do
 
   defp apply_success(state, action, value, metadata) do
     previous_fallback = state.render_fallback_active
+    previous_history = history_state(state)
 
     state =
       case action do
@@ -251,6 +333,7 @@ defmodule Jido.Document.Agent do
             state
             | document: Map.get(value, :document),
               disk_snapshot: Map.get(value, :disk_snapshot),
+              history_model: History.clear(state.history_model),
               preview: nil,
               last_good_preview: nil,
               render_fallback_active: false
@@ -264,10 +347,24 @@ defmodule Jido.Document.Agent do
           }
 
         :update_frontmatter ->
-          %{state | document: Map.get(value, :document, state.document)}
+          apply_update_document_state(state, action, value, metadata)
 
         :update_body ->
-          %{state | document: Map.get(value, :document, state.document)}
+          apply_update_document_state(state, action, value, metadata)
+
+        :undo ->
+          %{
+            state
+            | document: Map.get(value, :document, state.document),
+              history_model: Map.get(value, :history_model, state.history_model)
+          }
+
+        :redo ->
+          %{
+            state
+            | document: Map.get(value, :document, state.document),
+              history_model: Map.get(value, :history_model, state.history_model)
+          }
 
         :render ->
           apply_render_state(state, Map.get(value, :preview))
@@ -295,6 +392,8 @@ defmodule Jido.Document.Agent do
           metadata: metadata
         })
     end
+
+    maybe_emit_history_state_signal(state, previous_history, action, metadata)
 
     entry = %{
       action: action,
@@ -360,8 +459,9 @@ defmodule Jido.Document.Agent do
 
   defp compact_payload(%{} = value) do
     value
-    |> Map.drop([:document, :preview])
+    |> Map.drop([:document, :preview, :history_model])
     |> maybe_put(:document_revision, value[:document] && value.document.revision)
+    |> maybe_put(:history, value[:history])
     |> maybe_put(
       :preview_summary,
       value[:preview] && %{toc_size: length(value.preview.toc || [])}
@@ -419,6 +519,48 @@ defmodule Jido.Document.Agent do
   defp maybe_put(map, _key, nil), do: map
   defp maybe_put(map, key, value), do: Map.put(map, key, value)
 
+  defp apply_update_document_state(state, action, value, metadata) do
+    next_document = Map.get(value, :document, state.document)
+    changed? = Map.get(value, :changed?, revision_changed?(state.document, next_document))
+
+    history_model =
+      if changed? do
+        History.record(
+          state.history_model,
+          state.document,
+          action,
+          %{correlation_id: Map.get(metadata, :correlation_id)}
+        )
+      else
+        state.history_model
+      end
+
+    %{state | document: next_document, history_model: history_model}
+  end
+
+  defp maybe_emit_history_state_signal(state, previous_history_state, action, metadata) do
+    current_history_state = history_state(state)
+
+    if current_history_state != previous_history_state do
+      _ =
+        emit_signal(state, :updated, %{
+          action: :history_state,
+          revision: current_revision(state),
+          payload: Map.put(current_history_state, :trigger, action),
+          metadata: metadata
+        })
+    end
+
+    :ok
+  end
+
+  defp history_state(state), do: History.state(state.history_model)
+
+  defp revision_changed?(%Document{revision: old_revision}, %Document{revision: new_revision}),
+    do: old_revision != new_revision
+
+  defp revision_changed?(_before, _after), do: true
+
   defp normalize_map(%{} = map), do: map
   defp normalize_map(list) when is_list(list), do: Map.new(list)
   defp normalize_map(_), do: %{}
@@ -432,6 +574,10 @@ defmodule Jido.Document.Agent do
   end
 
   defp inject_command_defaults(_state, _action, params), do: params
+
+  defp default_correlation_id do
+    "jd-" <> Integer.to_string(System.unique_integer([:positive]))
+  end
 
   defp default_session_id do
     "session-" <> Integer.to_string(System.unique_integer([:positive]))
