@@ -11,7 +11,7 @@ defmodule Jido.Document.Agent do
 
   alias Jido.Document.Action
   alias Jido.Document.Action.Result
-  alias Jido.Document.{Document, Error, History, SignalBus}
+  alias Jido.Document.{Checkpoint, Document, Error, History, Persistence, SignalBus}
 
   @supported_actions [:load, :save, :update_frontmatter, :update_body, :render, :undo, :redo]
 
@@ -30,6 +30,10 @@ defmodule Jido.Document.Agent do
           document: Document.t() | nil,
           disk_snapshot: map() | nil,
           history_model: History.t(),
+          pending_checkpoint: Checkpoint.payload() | nil,
+          checkpoint_opts: keyword(),
+          autosave_interval_ms: non_neg_integer() | nil,
+          checkpoint_on_edit: boolean(),
           preview: map() | nil,
           last_good_preview: map() | nil,
           render_fallback_active: boolean(),
@@ -43,6 +47,10 @@ defmodule Jido.Document.Agent do
             document: nil,
             disk_snapshot: nil,
             history_model: %History{},
+            pending_checkpoint: nil,
+            checkpoint_opts: [],
+            autosave_interval_ms: nil,
+            checkpoint_on_edit: true,
             preview: nil,
             last_good_preview: nil,
             render_fallback_active: false,
@@ -84,17 +92,51 @@ defmodule Jido.Document.Agent do
   @spec state(GenServer.server()) :: state()
   def state(server), do: GenServer.call(server, :state)
 
+  @spec recovery_status(GenServer.server()) :: Checkpoint.payload() | nil
+  def recovery_status(server), do: GenServer.call(server, :recovery_status)
+
+  @spec recover(GenServer.server(), keyword()) :: Result.t()
+  def recover(server, opts \\ []), do: GenServer.call(server, {:recover, opts})
+
+  @spec discard_recovery(GenServer.server()) :: Result.t()
+  def discard_recovery(server), do: GenServer.call(server, :discard_recovery)
+
+  @spec list_recovery_candidates(keyword()) :: {:ok, [map()]} | {:error, Error.t()}
+  def list_recovery_candidates(opts \\ []) do
+    checkpoint_opts = checkpoint_opts_from(opts)
+
+    with {:ok, paths} <- Checkpoint.list_orphans(checkpoint_opts) do
+      {:ok,
+       Enum.map(paths, fn path ->
+         session_id = Path.basename(path, ".checkpoint")
+         %{session_id: session_id, checkpoint_path: path}
+       end)}
+    end
+  end
+
   @impl true
   def init(opts) do
     session_id = Keyword.get(opts, :session_id, default_session_id())
     signal_bus = Keyword.get(opts, :signal_bus, SignalBus)
     history_limit = Keyword.get(opts, :history_limit, 100)
+    checkpoint_opts = checkpoint_opts_from(opts)
+    autosave_interval_ms = normalize_autosave_interval(Keyword.get(opts, :autosave_interval_ms))
+    checkpoint_on_edit = Keyword.get(opts, :checkpoint_on_edit, true)
 
     state = %__MODULE__{
       session_id: session_id,
       signal_bus: signal_bus,
-      history_model: History.new(limit: history_limit)
+      history_model: History.new(limit: history_limit),
+      checkpoint_opts: checkpoint_opts,
+      autosave_interval_ms: autosave_interval_ms,
+      checkpoint_on_edit: checkpoint_on_edit
     }
+
+    state = load_pending_checkpoint(state)
+
+    if autosave_interval_ms != nil do
+      schedule_autosave(autosave_interval_ms)
+    end
 
     auto_load_path = Keyword.get(opts, :path)
 
@@ -133,6 +175,17 @@ defmodule Jido.Document.Agent do
   end
 
   def handle_call(:state, _from, state), do: {:reply, state, state}
+  def handle_call(:recovery_status, _from, state), do: {:reply, state.pending_checkpoint, state}
+
+  def handle_call({:recover, opts}, _from, state) do
+    {result, state} = recover_from_checkpoint(state, normalize_map(opts))
+    {:reply, result, state}
+  end
+
+  def handle_call(:discard_recovery, _from, state) do
+    {result, state} = discard_pending_checkpoint(state)
+    {:reply, result, state}
+  end
 
   def handle_call({:command, action, params, opts}, _from, state) do
     {result, state} = execute_command(state, action, params, opts)
@@ -142,6 +195,17 @@ defmodule Jido.Document.Agent do
   @impl true
   def handle_cast({:command_async, action, params, opts}, state) do
     {_result, state} = execute_command(state, action, params, opts)
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_info(:autosave_checkpoint, state) do
+    state = maybe_write_checkpoint(state, :timer, %{})
+
+    if state.autosave_interval_ms != nil do
+      schedule_autosave(state.autosave_interval_ms)
+    end
+
     {:noreply, state}
   end
 
@@ -370,6 +434,8 @@ defmodule Jido.Document.Agent do
           apply_render_state(state, Map.get(value, :preview))
       end
 
+    state = apply_checkpoint_policy(state, action, metadata)
+
     signal_type = signal_type_for_success(action)
 
     _ =
@@ -560,6 +626,282 @@ defmodule Jido.Document.Agent do
     do: old_revision != new_revision
 
   defp revision_changed?(_before, _after), do: true
+
+  defp apply_checkpoint_policy(state, :save, _metadata) do
+    case Checkpoint.discard(state.session_id, state.checkpoint_opts) do
+      :ok ->
+        %{state | pending_checkpoint: nil}
+
+      {:error, %Error{} = error} ->
+        _ =
+          emit_signal(state, :failed, %{
+            action: :checkpoint_discard,
+            revision: current_revision(state),
+            error: Error.to_map(error),
+            rollback: false,
+            metadata: %{}
+          })
+
+        state
+    end
+  end
+
+  defp apply_checkpoint_policy(state, action, metadata)
+       when action in [:update_frontmatter, :update_body, :undo, :redo] do
+    maybe_write_checkpoint(state, :edit, metadata)
+  end
+
+  defp apply_checkpoint_policy(state, _action, _metadata), do: state
+
+  defp maybe_write_checkpoint(state, reason, metadata) do
+    write? =
+      case reason do
+        :edit -> state.checkpoint_on_edit
+        _ -> true
+      end
+
+    if write? and checkpoint_writable?(state) do
+      case Checkpoint.write(
+             state.session_id,
+             state.document,
+             state.disk_snapshot,
+             state.checkpoint_opts
+           ) do
+        {:ok, _path} ->
+          case Checkpoint.load(state.session_id, state.checkpoint_opts) do
+            {:ok, payload} ->
+              %{state | pending_checkpoint: payload}
+
+            _ ->
+              state
+          end
+
+        {:error, %Error{} = error} ->
+          _ =
+            emit_signal(state, :failed, %{
+              action: :checkpoint_write,
+              revision: current_revision(state),
+              error: Error.to_map(error),
+              rollback: false,
+              metadata: metadata
+            })
+
+          state
+      end
+    else
+      state
+    end
+  end
+
+  defp checkpoint_writable?(%__MODULE__{document: %Document{dirty: true}}), do: true
+  defp checkpoint_writable?(_state), do: false
+
+  defp load_pending_checkpoint(state) do
+    case Checkpoint.load(state.session_id, state.checkpoint_opts) do
+      {:ok, payload} ->
+        _ =
+          emit_signal(state, :updated, %{
+            action: :recovery_available,
+            revision: current_revision(state),
+            payload: recovery_summary(payload)
+          })
+
+        %{state | pending_checkpoint: payload}
+
+      {:error, :not_found} ->
+        state
+
+      {:error, %Error{} = error} ->
+        _ =
+          emit_signal(state, :failed, %{
+            action: :recovery_load,
+            revision: current_revision(state),
+            error: Error.to_map(error),
+            rollback: false,
+            metadata: %{}
+          })
+
+        state
+    end
+  end
+
+  defp recover_from_checkpoint(state, opts) do
+    started = System.monotonic_time(:microsecond)
+    metadata = op_metadata(:recover, opts)
+
+    with {:ok, payload, state} <- fetch_pending_checkpoint(state),
+         :ok <- ensure_recovery_safe(payload, Map.get(opts, :force, false)),
+         :ok <- Checkpoint.discard(state.session_id, state.checkpoint_opts) do
+      recovered_state = %{
+        state
+        | document: payload.document,
+          disk_snapshot: payload.disk_snapshot,
+          pending_checkpoint: nil,
+          history_model: History.clear(state.history_model),
+          preview: nil,
+          last_good_preview: nil,
+          render_fallback_active: false
+      }
+
+      metadata = finish_op_metadata(metadata, started)
+
+      _ =
+        emit_signal(recovered_state, :updated, %{
+          action: :recovered,
+          revision: current_revision(recovered_state),
+          payload: Map.put(recovery_summary(payload), :force, Map.get(opts, :force, false)),
+          metadata: metadata
+        })
+
+      entry = %{
+        action: :load,
+        revision: current_revision(recovered_state),
+        timestamp: DateTime.utc_now(),
+        correlation_id: Map.get(metadata, :correlation_id)
+      }
+
+      result =
+        Result.ok(
+          %{
+            document: recovered_state.document,
+            recovered: true,
+            history: History.state(recovered_state.history_model)
+          },
+          metadata
+        )
+
+      {result, %{recovered_state | history: [entry | recovered_state.history]}}
+    else
+      {:error, %Error{} = error} ->
+        metadata = finish_op_metadata(metadata, started)
+        result = Result.error(error, metadata)
+        {result, apply_failure(state, :load, error, metadata, false)}
+    end
+  end
+
+  defp discard_pending_checkpoint(state) do
+    started = System.monotonic_time(:microsecond)
+    metadata = op_metadata(:discard_recovery, %{})
+
+    case Checkpoint.discard(state.session_id, state.checkpoint_opts) do
+      :ok ->
+        metadata = finish_op_metadata(metadata, started)
+
+        _ =
+          emit_signal(state, :updated, %{
+            action: :recovery_discarded,
+            revision: current_revision(state),
+            payload: %{session_id: state.session_id},
+            metadata: metadata
+          })
+
+        {Result.ok(%{discarded: true}, metadata), %{state | pending_checkpoint: nil}}
+
+      {:error, %Error{} = error} ->
+        metadata = finish_op_metadata(metadata, started)
+        result = Result.error(error, metadata)
+        {result, apply_failure(state, :load, error, metadata, false)}
+    end
+  end
+
+  defp fetch_pending_checkpoint(%__MODULE__{pending_checkpoint: %{} = payload} = state) do
+    {:ok, payload, state}
+  end
+
+  defp fetch_pending_checkpoint(state) do
+    case Checkpoint.load(state.session_id, state.checkpoint_opts) do
+      {:ok, payload} ->
+        {:ok, payload, %{state | pending_checkpoint: payload}}
+
+      {:error, :not_found} ->
+        {:error,
+         Error.new(:not_found, "no checkpoint available", %{session_id: state.session_id})}
+
+      {:error, %Error{} = error} ->
+        {:error, error}
+    end
+  end
+
+  defp ensure_recovery_safe(payload, true), do: ensure_payload_shape(payload)
+
+  defp ensure_recovery_safe(payload, false) do
+    with :ok <- ensure_payload_shape(payload),
+         :ok <- ensure_recovery_not_diverged(payload) do
+      :ok
+    end
+  end
+
+  defp ensure_payload_shape(%{document: %Document{}}), do: :ok
+
+  defp ensure_payload_shape(payload) do
+    {:error, Error.new(:validation_failed, "checkpoint payload is invalid", %{payload: payload})}
+  end
+
+  defp ensure_recovery_not_diverged(%{document: %Document{path: path}, disk_snapshot: baseline})
+       when is_binary(path) and is_map(baseline) do
+    case Persistence.detect_divergence(path, baseline) do
+      :ok ->
+        :ok
+
+      {:error, %Error{code: :conflict} = error} ->
+        {:error,
+         Error.merge_details(error, %{
+           remediation: [:force_recover, :discard, :reload]
+         })}
+
+      {:error, %Error{} = error} ->
+        {:error, error}
+    end
+  end
+
+  defp ensure_recovery_not_diverged(_payload), do: :ok
+
+  defp recovery_summary(payload) do
+    %{
+      session_id: payload.session_id,
+      captured_at_ms: payload.captured_at_ms,
+      path: payload.document.path,
+      revision: payload.document.revision
+    }
+  end
+
+  defp schedule_autosave(interval_ms) when is_integer(interval_ms) and interval_ms > 0 do
+    Process.send_after(self(), :autosave_checkpoint, interval_ms)
+  end
+
+  defp schedule_autosave(_interval_ms), do: :ok
+
+  defp normalize_autosave_interval(value) when is_integer(value) and value > 0, do: value
+  defp normalize_autosave_interval(_value), do: nil
+
+  defp checkpoint_opts_from(opts) when is_list(opts) do
+    case Keyword.get(opts, :checkpoint_dir) do
+      dir when is_binary(dir) and dir != "" -> [dir: dir]
+      _ -> []
+    end
+  end
+
+  defp checkpoint_opts_from(%{} = opts) do
+    case Map.get(opts, :checkpoint_dir) do
+      dir when is_binary(dir) and dir != "" -> [dir: dir]
+      _ -> []
+    end
+  end
+
+  defp checkpoint_opts_from(_opts), do: []
+
+  defp op_metadata(action, opts) do
+    %{
+      action: action,
+      correlation_id: Map.get(opts, :correlation_id, default_correlation_id()),
+      idempotency: :non_idempotent
+    }
+    |> maybe_put(:idempotency_key, Map.get(opts, :idempotency_key))
+  end
+
+  defp finish_op_metadata(metadata, started) do
+    Map.put(metadata, :duration_us, System.monotonic_time(:microsecond) - started)
+  end
 
   defp normalize_map(%{} = map), do: map
   defp normalize_map(list) when is_list(list), do: Map.new(list)

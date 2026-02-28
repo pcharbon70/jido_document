@@ -58,25 +58,25 @@ Description: Deliver durable persistence semantics, coherent edit history, and r
    [x] 6.2.2.3 Subtask - Emit history state signals.  
    Description: Inform subscribers when undo/redo availability changes.
 
- [ ] 6.3 Section - Autosave and Checkpoint Recovery  
+ [x] 6.3 Section - Autosave and Checkpoint Recovery  
  Description: Minimize data loss from process crashes or interruptions.
 
-  [ ] 6.3.1 Task - Implement autosave checkpoint mechanism  
+  [x] 6.3.1 Task - Implement autosave checkpoint mechanism  
   Description: Persist session recovery state on configurable cadence and triggers.
-   [ ] 6.3.1.1 Subtask - Define checkpoint file format and location policy.  
+   [x] 6.3.1.1 Subtask - Define checkpoint file format and location policy.  
    Description: Keep recovery artifacts discoverable and isolated.
-   [ ] 6.3.1.2 Subtask - Trigger checkpoints by timer and significant edits.  
+   [x] 6.3.1.2 Subtask - Trigger checkpoints by timer and significant edits.  
    Description: Balance durability with write overhead.
-   [ ] 6.3.1.3 Subtask - Clean checkpoints after successful durable save.  
+   [x] 6.3.1.3 Subtask - Clean checkpoints after successful durable save.  
    Description: Avoid stale recovery artifacts.
 
-  [ ] 6.3.2 Task - Implement crash/restart recovery flow  
+  [x] 6.3.2 Task - Implement crash/restart recovery flow  
   Description: Restore unsaved edits safely when sessions restart.
-   [ ] 6.3.2.1 Subtask - Detect orphan checkpoints on startup.  
+   [x] 6.3.2.1 Subtask - Detect orphan checkpoints on startup.  
    Description: Surface pending recovery candidates.
-   [ ] 6.3.2.2 Subtask - Provide recover/discard decision API.  
+   [x] 6.3.2.2 Subtask - Provide recover/discard decision API.  
    Description: Let consumers drive explicit recovery choices.
-   [ ] 6.3.2.3 Subtask - Reconcile recovered state with current disk content.  
+   [x] 6.3.2.3 Subtask - Reconcile recovered state with current disk content.  
    Description: Prevent accidental loss when disk changed after crash.
 
  [ ] 6.4 Section - Revisioning and Schema Evolution  
