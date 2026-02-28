@@ -5,79 +5,20 @@ on:
   push:
     branches:
       - main
-      - "codex/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  test-matrix:
-    name: Test (Elixir ${{ matrix.elixir }} / OTP ${{ matrix.otp }})
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - elixir: "1.17.3"
-            otp: "26.2"
-          - elixir: "1.18.4"
-            otp: "27.3"
+  lint:
+    name: Lint
+    uses: agentjido/github-actions/.github/workflows/elixir-lint.yml@main
 
-    defaults:
-      run:
-        working-directory: project
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Elixir
-        uses: erlef/setup-beam@v1
-        with:
-          elixir-version: ${{ matrix.elixir }}
-          otp-version: ${{ matrix.otp }}
-
-      - name: Cache deps and build
-        uses: actions/cache@v4
-        with:
-          path: |
-            project/deps
-            project/_build
-          key: ${{ runner.os }}-${{ matrix.elixir }}-${{ matrix.otp }}-${{ hashFiles('project/mix.lock') }}
-
-      - name: Install dependencies
-        run: mix deps.get
-
-      - name: Run CI gate
-        run: mix ci
-
-      - name: Run tests
-        run: mix test
-
-  static-analysis:
-    name: Static Analysis
-    runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: project
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Elixir
-        uses: erlef/setup-beam@v1
-        with:
-          elixir-version: "1.18.4"
-          otp-version: "27.3"
-
-      - name: Install dependencies
-        run: mix deps.get
-
-      - name: Format check
-        run: mix format --check-formatted
-
-      - name: Compile with warnings as errors
-        run: mix compile --warnings-as-errors
-
-      - name: Credo
-        run: mix credo --strict
-
-      - name: Dialyzer
-        run: mix dialyzer --format short
+  test:
+    name: Test
+    uses: agentjido/github-actions/.github/workflows/elixir-test.yml@main
+    with:
+      otp_versions: '["27", "28"]'
+      elixir_versions: '["1.18", "1.19"]'
+      test_command: mix test
