@@ -6,6 +6,8 @@ defmodule JidoDocs.Application do
   @impl true
   def start(_type, _args) do
     children = [
+      {JidoDocs.Render.Metrics, name: JidoDocs.Render.Metrics},
+      {JidoDocs.Render.JobQueue, name: JidoDocs.Render.JobQueue},
       {JidoDocs.SignalBus, name: JidoDocs.SignalBus}
     ]
 

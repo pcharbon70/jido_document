@@ -37,25 +37,25 @@ Description: Deliver high-quality markdown rendering with performant, reliable p
    [x] 4.1.2.3 Subtask - Add deterministic cache key generation.  
    Description: Enable render memoization without stale responses.
 
- [ ] 4.2 Section - Incremental Rendering and Scheduling  
+ [x] 4.2 Section - Incremental Rendering and Scheduling  
  Description: Keep previews responsive under frequent updates and large documents.
 
-  [ ] 4.2.1 Task - Implement incremental render decision logic  
+  [x] 4.2.1 Task - Implement incremental render decision logic  
   Description: Choose full or partial rerender paths based on change scope.
-   [ ] 4.2.1.1 Subtask - Track changed regions from body updates.  
+   [x] 4.2.1.1 Subtask - Track changed regions from body updates.  
    Description: Estimate impact on AST and preview output.
-   [ ] 4.2.1.2 Subtask - Define fallback threshold to full rerender.  
+   [x] 4.2.1.2 Subtask - Define fallback threshold to full rerender.  
    Description: Avoid complex incremental logic for high-impact edits.
-   [ ] 4.2.1.3 Subtask - Record incremental-render effectiveness metrics.  
+   [x] 4.2.1.3 Subtask - Record incremental-render effectiveness metrics.  
    Description: Measure whether optimization is worth retained complexity.
 
-  [ ] 4.2.2 Task - Implement render job queue and cancellation  
+  [x] 4.2.2 Task - Implement render job queue and cancellation  
   Description: Prevent stale render work from flooding the system.
-   [ ] 4.2.2.1 Subtask - Add queue with bounded capacity and prioritization.  
+   [x] 4.2.2.1 Subtask - Add queue with bounded capacity and prioritization.  
    Description: Prefer latest edits over obsolete pending jobs.
-   [ ] 4.2.2.2 Subtask - Cancel superseded render jobs.  
+   [x] 4.2.2.2 Subtask - Cancel superseded render jobs.  
    Description: Drop outdated jobs when newer revisions arrive.
-   [ ] 4.2.2.3 Subtask - Implement debounce/throttle controls.  
+   [x] 4.2.2.3 Subtask - Implement debounce/throttle controls.  
    Description: Balance responsiveness and CPU usage.
 
  [ ] 4.3 Section - Diagnostics, Fallbacks, and Safety  
