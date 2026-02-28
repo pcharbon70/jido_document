@@ -16,25 +16,25 @@ Back to index: [README](./README.md)
 [ ] 2 Phase 2 - Document Model, Frontmatter, and Schema  
 Description: Build the canonical document representation with deterministic parse, serialize, and validation behavior.
 
- [ ] 2.1 Section - Document Struct and Invariants  
+ [x] 2.1 Section - Document Struct and Invariants  
  Description: Define the core data model and enforce internal consistency rules.
 
-  [ ] 2.1.1 Task - Implement `JidoDocs.Document` struct contract  
+  [x] 2.1.1 Task - Implement `JidoDocs.Document` struct contract  
   Description: Introduce the canonical runtime shape for document state.
-   [ ] 2.1.1.1 Subtask - Define fields (`path`, `frontmatter`, `body`, `raw`, `schema`, `dirty`, `revision`).  
+   [x] 2.1.1.1 Subtask - Define fields (`path`, `frontmatter`, `body`, `raw`, `schema`, `dirty`, `revision`).  
    Description: Support editing, rendering, and persistence needs.
-   [ ] 2.1.1.2 Subtask - Add type specs and constructor helpers.  
+   [x] 2.1.1.2 Subtask - Add type specs and constructor helpers.  
    Description: Ensure compile-time clarity and consistent instantiation.
-   [ ] 2.1.1.3 Subtask - Define `dirty` and `revision` semantics.  
+   [x] 2.1.1.3 Subtask - Define `dirty` and `revision` semantics.  
    Description: Keep mutation tracking explicit and predictable.
 
-  [ ] 2.1.2 Task - Implement invariant validation helpers  
+  [x] 2.1.2 Task - Implement invariant validation helpers  
   Description: Prevent invalid document states from propagating.
-   [ ] 2.1.2.1 Subtask - Validate required fields and types.  
+   [x] 2.1.2.1 Subtask - Validate required fields and types.  
    Description: Reject malformed maps and unsupported values.
-   [ ] 2.1.2.2 Subtask - Validate schema compatibility assumptions.  
+   [x] 2.1.2.2 Subtask - Validate schema compatibility assumptions.  
    Description: Ensure document frontmatter aligns with active schema contract.
-   [ ] 2.1.2.3 Subtask - Add invariant guard entrypoints.  
+   [x] 2.1.2.3 Subtask - Add invariant guard entrypoints.  
    Description: Reuse checks across parse, update, and save flows.
 
  [ ] 2.2 Section - Frontmatter Parsing and Serialization  
