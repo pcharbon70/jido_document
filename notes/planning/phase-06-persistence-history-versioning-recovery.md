@@ -79,25 +79,25 @@ Description: Deliver durable persistence semantics, coherent edit history, and r
    [x] 6.3.2.3 Subtask - Reconcile recovered state with current disk content.  
    Description: Prevent accidental loss when disk changed after crash.
 
- [ ] 6.4 Section - Revisioning and Schema Evolution  
+ [x] 6.4 Section - Revisioning and Schema Evolution  
  Description: Track document evolution and support metadata model changes safely.
 
-  [ ] 6.4.1 Task - Implement revision metadata strategy  
+  [x] 6.4.1 Task - Implement revision metadata strategy  
   Description: Assign stable revision identifiers and provenance metadata.
-   [ ] 6.4.1.1 Subtask - Generate monotonic revision identifiers per session.  
+   [x] 6.4.1.1 Subtask - Generate monotonic revision identifiers per session.  
    Description: Enable deterministic ordering for updates and signals.
-   [ ] 6.4.1.2 Subtask - Attach actor/source metadata to revisions.  
+   [x] 6.4.1.2 Subtask - Attach actor/source metadata to revisions.  
    Description: Improve traceability across integration sources.
-   [ ] 6.4.1.3 Subtask - Persist revision metadata in save outputs or sidecars.  
+   [x] 6.4.1.3 Subtask - Persist revision metadata in save outputs or sidecars.  
    Description: Support long-running audit and merge workflows.
 
-  [ ] 6.4.2 Task - Implement schema evolution/migration helpers  
+  [x] 6.4.2 Task - Implement schema evolution/migration helpers  
   Description: Migrate frontmatter fields as schemas evolve between versions.
-   [ ] 6.4.2.1 Subtask - Add field rename/coercion migration primitives.  
+   [x] 6.4.2.1 Subtask - Add field rename/coercion migration primitives.  
    Description: Handle common schema drift scenarios.
-   [ ] 6.4.2.2 Subtask - Implement migration dry-run reporting.  
+   [x] 6.4.2.2 Subtask - Implement migration dry-run reporting.  
    Description: Show proposed changes before applying transformations.
-   [ ] 6.4.2.3 Subtask - Add irreversible-change safety guards.  
+   [x] 6.4.2.3 Subtask - Add irreversible-change safety guards.  
    Description: Require explicit confirmation for destructive migrations.
 
  [ ] 6.5 Section - Phase 6 Integration Tests  

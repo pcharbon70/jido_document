@@ -11,7 +11,7 @@ defmodule Jido.Document.Agent do
 
   alias Jido.Document.Action
   alias Jido.Document.Action.Result
-  alias Jido.Document.{Checkpoint, Document, Error, History, Persistence, SignalBus}
+  alias Jido.Document.{Checkpoint, Document, Error, History, Persistence, Revision, SignalBus}
 
   @supported_actions [:load, :save, :update_frontmatter, :update_body, :render, :undo, :redo]
 
@@ -34,6 +34,8 @@ defmodule Jido.Document.Agent do
           checkpoint_opts: keyword(),
           autosave_interval_ms: non_neg_integer() | nil,
           checkpoint_on_edit: boolean(),
+          revision_sequence: non_neg_integer(),
+          latest_revision_entry: Revision.entry() | nil,
           preview: map() | nil,
           last_good_preview: map() | nil,
           render_fallback_active: boolean(),
@@ -51,6 +53,8 @@ defmodule Jido.Document.Agent do
             checkpoint_opts: [],
             autosave_interval_ms: nil,
             checkpoint_on_edit: true,
+            revision_sequence: 0,
+            latest_revision_entry: nil,
             preview: nil,
             last_good_preview: nil,
             render_fallback_active: false,
@@ -435,6 +439,8 @@ defmodule Jido.Document.Agent do
       end
 
     state = apply_checkpoint_policy(state, action, metadata)
+    {state, revision_entry} = bump_revision_sequence(state, action, metadata)
+    signal_metadata = Map.put(metadata, :revision_entry, revision_entry)
 
     signal_type = signal_type_for_success(action)
 
@@ -446,7 +452,7 @@ defmodule Jido.Document.Agent do
           action: action,
           revision: current_revision(state),
           payload: compact_payload(value),
-          metadata: metadata
+          metadata: signal_metadata
         }
       )
 
@@ -455,17 +461,17 @@ defmodule Jido.Document.Agent do
         emit_signal(state, :updated, %{
           action: :render_recovered,
           revision: current_revision(state),
-          metadata: metadata
+          metadata: signal_metadata
         })
     end
 
-    maybe_emit_history_state_signal(state, previous_history, action, metadata)
+    maybe_emit_history_state_signal(state, previous_history, action, signal_metadata)
 
     entry = %{
       action: action,
       revision: current_revision(state),
       timestamp: DateTime.utc_now(),
-      correlation_id: Map.get(metadata, :correlation_id)
+      correlation_id: Map.get(signal_metadata, :correlation_id)
     }
 
     %{state | history: [entry | state.history]}
@@ -903,15 +909,54 @@ defmodule Jido.Document.Agent do
     Map.put(metadata, :duration_us, System.monotonic_time(:microsecond) - started)
   end
 
+  defp bump_revision_sequence(state, action, metadata) do
+    attrs = %{
+      document_revision: current_revision(state),
+      source: Map.get(metadata, :source, :agent),
+      correlation_id: Map.get(metadata, :correlation_id),
+      metadata: %{
+        idempotency: Map.get(metadata, :idempotency),
+        idempotency_key: Map.get(metadata, :idempotency_key)
+      }
+    }
+
+    {sequence, entry} = Revision.next(state.session_id, state.revision_sequence, action, attrs)
+    {%{state | revision_sequence: sequence, latest_revision_entry: entry}, entry}
+  end
+
+  defp projected_revision_metadata(state, action) do
+    next_sequence = state.revision_sequence + 1
+    revision_id = "#{state.session_id}-#{next_sequence}"
+
+    %{
+      schema_version: 1,
+      session_id: state.session_id,
+      revision_id: revision_id,
+      sequence: next_sequence,
+      action: action,
+      document_revision: current_revision(state),
+      source: "agent",
+      actor: "session:" <> state.session_id,
+      generated_at: DateTime.utc_now()
+    }
+  end
+
   defp normalize_map(%{} = map), do: map
   defp normalize_map(list) when is_list(list), do: Map.new(list)
   defp normalize_map(_), do: %{}
 
   defp inject_command_defaults(state, :save, params) do
-    if Map.has_key?(params, :baseline) do
+    params =
+      if Map.has_key?(params, :baseline) do
+        params
+      else
+        Map.put(params, :baseline, state.disk_snapshot)
+      end
+
+    if Map.has_key?(params, :revision_metadata) do
       params
     else
-      Map.put(params, :baseline, state.disk_snapshot)
+      Map.put(params, :revision_metadata, projected_revision_metadata(state, :save))
     end
   end
 
