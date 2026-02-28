@@ -105,6 +105,38 @@ defmodule JidoDocs.Renderer do
     |> Base.encode16(case: :lower)
   end
 
+  @spec fallback_preview(String.t(), Error.t() | term(), keyword() | map()) :: output()
+  def fallback_preview(markdown, error_or_reason, opts \\ %{}) when is_binary(markdown) do
+    config = normalize_opts(opts)
+
+    reason =
+      if match?(%Error{}, error_or_reason),
+        do: error_or_reason,
+        else: Error.from_reason(error_or_reason, %{component: :renderer})
+
+    normalized =
+      markdown
+      |> String.replace("\r\n", "\n")
+      |> maybe_strip_frontmatter(config.strip_frontmatter)
+
+    %{
+      html: "<pre>#{escape_html(normalized)}</pre>",
+      toc: [],
+      diagnostics: [
+        diagnostic(
+          :error,
+          "fallback preview active: #{reason.message}",
+          nil,
+          "Fix render issues and re-run render to recover normal preview mode",
+          :fallback_preview
+        )
+      ],
+      cache_key: cache_key(normalized, config, :fallback),
+      adapter: :fallback,
+      metadata: %{fallback: true, source_bytes: byte_size(normalized)}
+    }
+  end
+
   defp normalize_opts(opts) when is_list(opts), do: normalize_opts(Map.new(opts))
 
   defp normalize_opts(%{} = opts) do
@@ -141,6 +173,15 @@ defmodule JidoDocs.Renderer do
   end
 
   defp prepare_markdown(raw, _config), do: {:ok, raw, []}
+
+  defp maybe_strip_frontmatter(raw, true) do
+    case Frontmatter.split(raw) do
+      {:ok, %{body: body}} -> body
+      _ -> raw
+    end
+  end
+
+  defp maybe_strip_frontmatter(raw, false), do: raw
 
   defp render_html(markdown, %{adapter: :mdex} = config) do
     if Code.ensure_loaded?(Mdex) and function_exported?(Mdex, :to_html, 1) do

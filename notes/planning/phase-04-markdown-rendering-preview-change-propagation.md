@@ -58,25 +58,25 @@ Description: Deliver high-quality markdown rendering with performant, reliable p
    [x] 4.2.2.3 Subtask - Implement debounce/throttle controls.  
    Description: Balance responsiveness and CPU usage.
 
- [ ] 4.3 Section - Diagnostics, Fallbacks, and Safety  
+ [x] 4.3 Section - Diagnostics, Fallbacks, and Safety  
  Description: Ensure rendering failures are observable and user-safe.
 
-  [ ] 4.3.1 Task - Implement normalized render diagnostics  
+  [x] 4.3.1 Task - Implement normalized render diagnostics  
   Description: Surface parser and rendering warnings/errors in a consistent structure.
-   [ ] 4.3.1.1 Subtask - Map renderer warnings to severity levels.  
+   [x] 4.3.1.1 Subtask - Map renderer warnings to severity levels.  
    Description: Distinguish informational, warning, and blocking issues.
-   [ ] 4.3.1.2 Subtask - Include source locations where available.  
+   [x] 4.3.1.2 Subtask - Include source locations where available.  
    Description: Help adapters highlight problematic ranges.
-   [ ] 4.3.1.3 Subtask - Attach remediation hints for common failures.  
+   [x] 4.3.1.3 Subtask - Attach remediation hints for common failures.  
    Description: Speed debugging for malformed markdown.
 
-  [ ] 4.3.2 Task - Implement fallback rendering strategy  
+  [x] 4.3.2 Task - Implement fallback rendering strategy  
   Description: Maintain preview availability during renderer failure scenarios.
-   [ ] 4.3.2.1 Subtask - Keep and serve last known good preview.  
+   [x] 4.3.2.1 Subtask - Keep and serve last known good preview.  
    Description: Avoid blank preview regressions on transient failures.
-   [ ] 4.3.2.2 Subtask - Add safe plain-markdown fallback output.  
+   [x] 4.3.2.2 Subtask - Add safe plain-markdown fallback output.  
    Description: Provide minimal preview for unsupported constructs.
-   [ ] 4.3.2.3 Subtask - Add failure event and recovery signals.  
+   [x] 4.3.2.3 Subtask - Add failure event and recovery signals.  
    Description: Inform adapters when fallback mode is active.
 
  [ ] 4.4 Section - Extensibility and Content Feature Support  
