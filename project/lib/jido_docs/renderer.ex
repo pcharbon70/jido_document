@@ -9,6 +9,7 @@ defmodule JidoDocs.Renderer do
   """
 
   alias JidoDocs.{Error, Frontmatter}
+  alias JidoDocs.Render.{PluginManager, ThemeRegistry}
 
   @default_extensions %{
     autolink: true,
@@ -29,7 +30,9 @@ defmodule JidoDocs.Renderer do
     strip_frontmatter: true,
     extensions: @default_extensions,
     syntax_highlight: @default_syntax_highlight,
-    frontmatter_syntax: nil
+    frontmatter_syntax: nil,
+    plugins: [],
+    max_code_block_lines: 300
   }
 
   @type severity :: :info | :warning | :error
@@ -64,22 +67,26 @@ defmodule JidoDocs.Renderer do
     config = normalize_opts(opts)
 
     with {:ok, prepared, prep_diagnostics} <- prepare_markdown(markdown, config),
-         {:ok, html, adapter, render_diagnostics} <- render_html(prepared, config) do
-      toc = extract_headings(prepared)
-      diagnostics = prep_diagnostics ++ render_diagnostics
+         {:ok, transformed, plugin_diagnostics} <- apply_plugins(prepared, config),
+         {:ok, html, adapter, render_diagnostics} <- render_html(transformed, config) do
+      toc = extract_headings(transformed)
+
+      diagnostics =
+        config.config_diagnostics ++ prep_diagnostics ++ plugin_diagnostics ++ render_diagnostics
 
       {:ok,
        %{
          html: html,
          toc: toc,
          diagnostics: diagnostics,
-         cache_key: cache_key(prepared, config, adapter),
+         cache_key: cache_key(transformed, config, adapter),
          adapter: adapter,
          metadata: %{
-           source_bytes: byte_size(prepared),
+           source_bytes: byte_size(transformed),
            heading_count: length(toc),
            extensions: config.extensions,
-           syntax_highlight: config.syntax_highlight
+           syntax_highlight: config.syntax_highlight,
+           plugins: config.plugins
          }
        }}
     end
@@ -147,7 +154,30 @@ defmodule JidoDocs.Renderer do
       |> Map.get(:syntax_highlight, %{})
       |> deep_merge(@default_syntax_highlight)
 
-    %{merged | syntax_highlight: syntax_highlight}
+    {theme, theme_diagnostics} =
+      case ThemeRegistry.normalize(syntax_highlight.theme) do
+        {:ok, normalized_theme} ->
+          {normalized_theme, []}
+
+        {:error, default_theme, known_themes} ->
+          diagnostic =
+            diagnostic(
+              :warning,
+              "unknown theme '#{syntax_highlight.theme}', using default '#{default_theme}'",
+              nil,
+              "Known themes: #{Enum.join(known_themes, ", ")}",
+              :unknown_theme
+            )
+
+          {default_theme, [diagnostic]}
+      end
+
+    syntax_highlight = %{syntax_highlight | theme: theme}
+
+    merged
+    |> Map.put(:syntax_highlight, syntax_highlight)
+    |> Map.put(:config_diagnostics, theme_diagnostics)
+    |> Map.put(:plugins, normalize_plugins(Map.get(merged, :plugins, [])))
   end
 
   defp prepare_markdown(raw, %{strip_frontmatter: true}) do
@@ -173,6 +203,16 @@ defmodule JidoDocs.Renderer do
   end
 
   defp prepare_markdown(raw, _config), do: {:ok, raw, []}
+
+  defp apply_plugins(markdown, config) do
+    plugin_context = %{
+      adapter: config.adapter,
+      extensions: config.extensions,
+      syntax_highlight: config.syntax_highlight
+    }
+
+    PluginManager.apply_plugins(markdown, config.plugins, plugin_context)
+  end
 
   defp maybe_strip_frontmatter(raw, true) do
     case Frontmatter.split(raw) do
@@ -229,17 +269,19 @@ defmodule JidoDocs.Renderer do
                                                                      fence_state} ->
         case {fence_state, parse_fence(line)} do
           {:outside, :toggle} ->
-            {["<pre><code>" | acc_html], acc_diag, {:inside, "text"}}
+            {["<pre><code>" | acc_html], acc_diag, {:inside, "text", 0, false}}
 
           {:outside, {:open, lang}} ->
             {tag, diag} = code_tag_for(lang, config, line_no)
-            {["<pre><code#{tag}>" | acc_html], maybe_prepend(diag, acc_diag), {:inside, lang}}
 
-          {{:inside, _lang}, :toggle} ->
+            {["<pre><code#{tag}>" | acc_html], maybe_prepend(diag, acc_diag),
+             {:inside, lang, 0, false}}
+
+          {{:inside, _lang, _count, _truncated?}, :toggle} ->
             {["</code></pre>" | acc_html], acc_diag, :outside}
 
-          {{:inside, _lang}, _} ->
-            {[escape_html(line) | acc_html], acc_diag, fence_state}
+          {{:inside, lang, count, truncated?}, _} ->
+            handle_code_line(line, line_no, lang, count, truncated?, config, acc_html, acc_diag)
 
           {:outside, _} ->
             {rendered, diag} = line_to_html(line, line_no, heading_ids)
@@ -248,6 +290,31 @@ defmodule JidoDocs.Renderer do
       end)
 
     {:ok, Enum.reverse(html_lines) |> Enum.join("\n"), :simple, Enum.reverse(diagnostics)}
+  end
+
+  defp handle_code_line(line, line_no, lang, count, truncated?, config, html, diagnostics) do
+    max_lines = config.max_code_block_lines
+
+    cond do
+      count < max_lines ->
+        {[escape_html(line) | html], diagnostics, {:inside, lang, count + 1, truncated?}}
+
+      truncated? ->
+        {html, diagnostics, {:inside, lang, count + 1, true}}
+
+      true ->
+        diag =
+          diagnostic(
+            :warning,
+            "large code block truncated in preview",
+            %{line: line_no},
+            "Increase max_code_block_lines if full preview is required",
+            :code_block_truncated
+          )
+
+        {["... (truncated for performance) ..." | html], [diag | diagnostics],
+         {:inside, lang, count + 1, true}}
+    end
   end
 
   defp parse_fence(line) do
@@ -397,6 +464,9 @@ defmodule JidoDocs.Renderer do
 
   defp maybe_prepend(nil, list), do: list
   defp maybe_prepend(item, list), do: [item | list]
+
+  defp normalize_plugins(plugins) when is_list(plugins), do: plugins
+  defp normalize_plugins(_), do: []
 
   defp deep_merge(base, override) when is_map(base) and is_map(override) do
     Map.merge(base, override, fn _key, a, b ->

@@ -79,25 +79,25 @@ Description: Deliver high-quality markdown rendering with performant, reliable p
    [x] 4.3.2.3 Subtask - Add failure event and recovery signals.  
    Description: Inform adapters when fallback mode is active.
 
- [ ] 4.4 Section - Extensibility and Content Feature Support  
+ [x] 4.4 Section - Extensibility and Content Feature Support  
  Description: Prepare rendering pipeline for future plugin and feature growth.
 
-  [ ] 4.4.1 Task - Implement theme and code-language abstraction  
+  [x] 4.4.1 Task - Implement theme and code-language abstraction  
   Description: Support configurable syntax highlighting without tight coupling.
-   [ ] 4.4.1.1 Subtask - Add renderer theme registry abstraction.  
+   [x] 4.4.1.1 Subtask - Add renderer theme registry abstraction.  
    Description: Allow theme switching by adapter or user setting.
-   [ ] 4.4.1.2 Subtask - Handle unsupported language identifiers.  
+   [x] 4.4.1.2 Subtask - Handle unsupported language identifiers.  
    Description: Fall back to plaintext rendering deterministically.
-   [ ] 4.4.1.3 Subtask - Add large code-block performance safeguards.  
+   [x] 4.4.1.3 Subtask - Add large code-block performance safeguards.  
    Description: Avoid pathological render latency on oversized snippets.
 
-  [ ] 4.4.2 Task - Implement plugin extension points  
+  [x] 4.4.2 Task - Implement plugin extension points  
   Description: Allow optional custom markdown transforms safely.
-   [ ] 4.4.2.1 Subtask - Define plugin registration and ordering rules.  
+   [x] 4.4.2.1 Subtask - Define plugin registration and ordering rules.  
    Description: Keep plugin execution deterministic.
-   [ ] 4.4.2.2 Subtask - Isolate plugin failures from core rendering.  
+   [x] 4.4.2.2 Subtask - Isolate plugin failures from core rendering.  
    Description: Prevent one faulty plugin from crashing preview pipeline.
-   [ ] 4.4.2.3 Subtask - Add plugin compatibility checks at startup.  
+   [x] 4.4.2.3 Subtask - Add plugin compatibility checks at startup.  
    Description: Fail fast with diagnostics when plugin contracts mismatch.
 
  [ ] 4.5 Section - Phase 4 Integration Tests  
