@@ -16,7 +16,7 @@ Back to index: [README](./README.md)
 - Signals are the primary synchronization channel to UI adapters.
 - Agent is the source of truth for in-session document state.
 
-[ ] 3 Phase 3 - Actions, Signals, and Agent Session Lifecycle  
+[x] 3 Phase 3 - Actions, Signals, and Agent Session Lifecycle  
 Description: Build atomic operation verbs, stable event contracts, and reliable session orchestration.
 
  [x] 3.1 Section - Action Contracts and Error Taxonomy  
@@ -103,23 +103,23 @@ Description: Build atomic operation verbs, stable event contracts, and reliable 
    [x] 3.4.2.3 Subtask - Add optimistic-update rollback strategy.  
    Description: Reconcile failed actions without corrupting session state.
 
- [ ] 3.5 Section - Phase 3 Integration Tests  
+ [x] 3.5 Section - Phase 3 Integration Tests  
  Description: Validate action orchestration, signal delivery, and session lifecycle behavior.
 
-  [ ] 3.5.1 Task - Action and signal integration tests  
+  [x] 3.5.1 Task - Action and signal integration tests  
   Description: Confirm that action execution emits expected event sequences.
-   [ ] 3.5.1.1 Subtask - Verify load/update/save signal order.  
+   [x] 3.5.1.1 Subtask - Verify load/update/save signal order.  
    Description: Ensure deterministic events for adapter consumers.
-   [ ] 3.5.1.2 Subtask - Verify failed action event payloads.  
+   [x] 3.5.1.2 Subtask - Verify failed action event payloads.  
    Description: Confirm diagnostic completeness and reason codes.
-   [ ] 3.5.1.3 Subtask - Verify event schema version consistency.  
+   [x] 3.5.1.3 Subtask - Verify event schema version consistency.  
    Description: Ensure adapters can parse expected payload versions.
 
-  [ ] 3.5.2 Task - Session lifecycle and concurrency tests  
+  [x] 3.5.2 Task - Session lifecycle and concurrency tests  
   Description: Validate behavior under parallel edits and process restarts.
-   [ ] 3.5.2.1 Subtask - Simulate concurrent frontmatter/body updates.  
+   [x] 3.5.2.1 Subtask - Simulate concurrent frontmatter/body updates.  
    Description: Confirm conflict resolution and revision integrity.
-   [ ] 3.5.2.2 Subtask - Simulate save/render overlap under load.  
+   [x] 3.5.2.2 Subtask - Simulate save/render overlap under load.  
    Description: Ensure no stale preview overwrite occurs.
-   [ ] 3.5.2.3 Subtask - Simulate crash/restart of agent process.  
+   [x] 3.5.2.3 Subtask - Simulate crash/restart of agent process.  
    Description: Verify predictable recovery and signal continuity.
