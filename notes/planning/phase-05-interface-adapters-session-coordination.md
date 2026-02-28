@@ -37,25 +37,25 @@ Description: Connect LiveView, TUI, and Desktop clients to shared session agents
    [x] 5.1.2.3 Subtask - Add administrative takeover path.  
    Description: Allow controlled override for stuck sessions.
 
- [ ] 5.2 Section - LiveView Adapter  
+ [x] 5.2 Section - LiveView Adapter  
  Description: Provide a first-class Phoenix LiveView integration path.
 
-  [ ] 5.2.1 Task - Implement LiveView command and event bridge  
+  [x] 5.2.1 Task - Implement LiveView command and event bridge  
   Description: Map LiveView events to actions and signals to assigns updates.
-   [ ] 5.2.1.1 Subtask - Implement mount/connect session bootstrap.  
+   [x] 5.2.1.1 Subtask - Implement mount/connect session bootstrap.  
    Description: Initialize or attach to session by file path/session ID.
-   [ ] 5.2.1.2 Subtask - Forward form and textarea change events.  
+   [x] 5.2.1.2 Subtask - Forward form and textarea change events.  
    Description: Route frontmatter/body updates via agent commands.
-   [ ] 5.2.1.3 Subtask - Subscribe and map signals to assigns.  
+   [x] 5.2.1.3 Subtask - Subscribe and map signals to assigns.  
    Description: Keep UI state synchronized with agent state.
 
-  [ ] 5.2.2 Task - Implement schema-driven frontmatter form generation  
+  [x] 5.2.2 Task - Implement schema-driven frontmatter form generation  
   Description: Build dynamic forms from `JidoDocs.Schema` definitions.
-   [ ] 5.2.2.1 Subtask - Map field types to LiveView form components.  
+   [x] 5.2.2.1 Subtask - Map field types to LiveView form components.  
    Description: Support booleans, arrays, enums, and text values.
-   [ ] 5.2.2.2 Subtask - Render inline validation errors and hints.  
+   [x] 5.2.2.2 Subtask - Render inline validation errors and hints.  
    Description: Display field-path diagnostics from schema validation.
-   [ ] 5.2.2.3 Subtask - Add dirty/saving state indicators.  
+   [x] 5.2.2.3 Subtask - Add dirty/saving state indicators.  
    Description: Reflect session state transitions in UI controls.
 
  [ ] 5.3 Section - TUI Adapter  

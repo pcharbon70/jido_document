@@ -83,7 +83,9 @@ defmodule JidoDocs.Phase5SessionRegistryIntegrationTest do
 
     assert :ok = SessionRegistry.validate_lock(ctx.registry, session_id, lock.lock_token)
 
-    assert {:error, conflict} = SessionRegistry.acquire_lock(ctx.registry, session_id, "tui-client")
+    assert {:error, conflict} =
+             SessionRegistry.acquire_lock(ctx.registry, session_id, "tui-client")
+
     assert conflict.code == :conflict
     assert conflict.details.owner == "liveview-client"
     assert conflict.details.requested_owner == "tui-client"
@@ -114,7 +116,9 @@ defmodule JidoDocs.Phase5SessionRegistryIntegrationTest do
                     }},
                    500
 
-    assert {:error, invalid} = SessionRegistry.release_lock(ctx.registry, session_id, lock.lock_token)
+    assert {:error, invalid} =
+             SessionRegistry.release_lock(ctx.registry, session_id, lock.lock_token)
+
     assert invalid.code == :conflict
 
     assert :ok = SessionRegistry.release_lock(ctx.registry, session_id, takeover.lock_token)

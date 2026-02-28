@@ -61,7 +61,8 @@ defmodule JidoDocs.SessionRegistry do
     GenServer.call(server, {:ensure_session_by_path, path, opts})
   end
 
-  @spec fetch_session(GenServer.server(), session_id()) :: {:ok, session_info()} | {:error, Error.t()}
+  @spec fetch_session(GenServer.server(), session_id()) ::
+          {:ok, session_info()} | {:error, Error.t()}
   def fetch_session(server \\ __MODULE__, session_id) do
     GenServer.call(server, {:fetch_session, session_id})
   end
@@ -89,7 +90,13 @@ defmodule JidoDocs.SessionRegistry do
   end
 
   @spec force_takeover(GenServer.server(), session_id(), owner_id(), keyword()) ::
-          {:ok, %{lock_token: String.t(), lock_revision: non_neg_integer(), owner: owner_id(), previous_owner: owner_id() | nil}}
+          {:ok,
+           %{
+             lock_token: String.t(),
+             lock_revision: non_neg_integer(),
+             owner: owner_id(),
+             previous_owner: owner_id() | nil
+           }}
           | {:error, Error.t()}
   def force_takeover(server \\ __MODULE__, session_id, owner_id, opts \\ []) do
     GenServer.call(server, {:force_takeover, session_id, owner_id, opts})
@@ -144,7 +151,8 @@ defmodule JidoDocs.SessionRegistry do
   def handle_call({:fetch_session, session_id}, _from, state) do
     case Map.get(state.sessions, session_id) do
       nil ->
-        {:reply, {:error, Error.new(:not_found, "session not found", %{session_id: session_id})}, state}
+        {:reply, {:error, Error.new(:not_found, "session not found", %{session_id: session_id})},
+         state}
 
       info ->
         state = touch_info(state, session_id)
@@ -180,9 +188,22 @@ defmodule JidoDocs.SessionRegistry do
   def handle_call({:release_lock, session_id, lock_token}, _from, state) do
     with {:ok, session} <- fetch_session_info(state, session_id),
          :ok <- ensure_lock_token(session, lock_token) do
-      updated_session = %{session | lock_token: nil, lock_owner: nil, lock_revision: session.lock_revision + 1, last_seen_ms: now_ms()}
+      updated_session = %{
+        session
+        | lock_token: nil,
+          lock_owner: nil,
+          lock_revision: session.lock_revision + 1,
+          last_seen_ms: now_ms()
+      }
+
       state = put_session(state, updated_session)
-      emit_lock_signal(state, session_id, %{action: :released, owner: nil, lock_revision: updated_session.lock_revision})
+
+      emit_lock_signal(state, session_id, %{
+        action: :released,
+        owner: nil,
+        lock_revision: updated_session.lock_revision
+      })
+
       {:reply, :ok, state}
     else
       {:error, %Error{} = error} -> {:reply, {:error, error}, state}
@@ -196,7 +217,13 @@ defmodule JidoDocs.SessionRegistry do
       lock_token = new_lock_token(session_id, owner_id)
 
       updated_session =
-        %{session | lock_token: lock_token, lock_owner: owner_id, lock_revision: session.lock_revision + 1, last_seen_ms: now_ms()}
+        %{
+          session
+          | lock_token: lock_token,
+            lock_owner: owner_id,
+            lock_revision: session.lock_revision + 1,
+            last_seen_ms: now_ms()
+        }
 
       state = put_session(state, updated_session)
 
@@ -215,7 +242,8 @@ defmodule JidoDocs.SessionRegistry do
     end
   end
 
-  def handle_call({:reclaim_idle, max_idle_ms}, _from, state) when is_integer(max_idle_ms) and max_idle_ms >= 0 do
+  def handle_call({:reclaim_idle, max_idle_ms}, _from, state)
+      when is_integer(max_idle_ms) and max_idle_ms >= 0 do
     {state, removed_ids} = reclaim_idle_sessions(state, max_idle_ms)
     {:reply, {:ok, removed_ids}, state}
   end
@@ -245,7 +273,9 @@ defmodule JidoDocs.SessionRegistry do
 
   defp ensure_started(state, session_id, path, opts) do
     case Map.get(state.sessions, session_id) do
-      nil -> start_new_session(state, session_id, path, opts)
+      nil ->
+        start_new_session(state, session_id, path, opts)
+
       info ->
         updated_info = maybe_attach_path(info, path)
 
@@ -302,11 +332,17 @@ defmodule JidoDocs.SessionRegistry do
           last_seen_ms: now_ms()
         }
 
-        state = state |> put_session(info) |> put_path_index(path, session_id) |> put_monitor(ref, session_id)
+        state =
+          state
+          |> put_session(info)
+          |> put_path_index(path, session_id)
+          |> put_monitor(ref, session_id)
+
         {:ok, state, info}
 
       {:error, reason} ->
-        {:error, Error.new(:internal, "failed to start session", %{session_id: session_id, reason: reason})}
+        {:error,
+         Error.new(:internal, "failed to start session", %{session_id: session_id, reason: reason})}
     end
   end
 
@@ -316,7 +352,11 @@ defmodule JidoDocs.SessionRegistry do
     cond do
       expected != nil and session.lock_token != expected ->
         {:error,
-         Error.new(:conflict, "stale lock token", %{session_id: session.session_id, expected_token: expected, actual_token: session.lock_token})}
+         Error.new(:conflict, "stale lock token", %{
+           session_id: session.session_id,
+           expected_token: expected,
+           actual_token: session.lock_token
+         })}
 
       session.lock_token == nil ->
         grant_lock(session, owner_id)
@@ -325,13 +365,22 @@ defmodule JidoDocs.SessionRegistry do
         if Keyword.get(opts, :rotate_token, false) do
           grant_lock(session, owner_id)
         else
-          payload = %{lock_token: session.lock_token, lock_revision: session.lock_revision, owner: owner_id}
+          payload = %{
+            lock_token: session.lock_token,
+            lock_revision: session.lock_revision,
+            owner: owner_id
+          }
+
           {:ok, %{session | last_seen_ms: now_ms()}, payload}
         end
 
       true ->
         {:error,
-         Error.new(:conflict, "session lock held by another owner", %{session_id: session.session_id, owner: session.lock_owner, requested_owner: owner_id})}
+         Error.new(:conflict, "session lock held by another owner", %{
+           session_id: session.session_id,
+           owner: session.lock_owner,
+           requested_owner: owner_id
+         })}
     end
   end
 
@@ -339,7 +388,13 @@ defmodule JidoDocs.SessionRegistry do
     lock_token = new_lock_token(session.session_id, owner_id)
 
     updated =
-      %{session | lock_token: lock_token, lock_owner: owner_id, lock_revision: session.lock_revision + 1, last_seen_ms: now_ms()}
+      %{
+        session
+        | lock_token: lock_token,
+          lock_owner: owner_id,
+          lock_revision: session.lock_revision + 1,
+          last_seen_ms: now_ms()
+      }
 
     payload = %{lock_token: lock_token, lock_revision: updated.lock_revision, owner: owner_id}
     {:ok, updated, payload}
@@ -348,10 +403,15 @@ defmodule JidoDocs.SessionRegistry do
   defp ensure_lock_token(session, token) when is_binary(token) and token != "" do
     cond do
       session.lock_token == nil ->
-        {:error, Error.new(:conflict, "session has no active lock", %{session_id: session.session_id})}
+        {:error,
+         Error.new(:conflict, "session has no active lock", %{session_id: session.session_id})}
 
       session.lock_token != token ->
-        {:error, Error.new(:conflict, "invalid lock token", %{session_id: session.session_id, provided_token: token})}
+        {:error,
+         Error.new(:conflict, "invalid lock token", %{
+           session_id: session.session_id,
+           provided_token: token
+         })}
 
       true ->
         :ok
@@ -359,7 +419,8 @@ defmodule JidoDocs.SessionRegistry do
   end
 
   defp ensure_lock_token(_session, token) do
-    {:error, Error.new(:invalid_params, "lock_token must be non-empty binary", %{lock_token: token})}
+    {:error,
+     Error.new(:invalid_params, "lock_token must be non-empty binary", %{lock_token: token})}
   end
 
   defp fetch_session_info(state, session_id) do
@@ -380,9 +441,13 @@ defmodule JidoDocs.SessionRegistry do
     Enum.reduce(stale_ids, {state, []}, fn session_id, {acc_state, removed} ->
       acc_state =
         case Map.get(acc_state.sessions, session_id) do
-          nil -> acc_state
+          nil ->
+            acc_state
+
           %{pid: pid} ->
-            if Process.alive?(pid), do: DynamicSupervisor.terminate_child(acc_state.session_supervisor, pid)
+            if Process.alive?(pid),
+              do: DynamicSupervisor.terminate_child(acc_state.session_supervisor, pid)
+
             remove_session(acc_state, session_id)
         end
 
@@ -392,7 +457,14 @@ defmodule JidoDocs.SessionRegistry do
   end
 
   defp emit_lock_signal(state, session_id, payload) do
-    SignalBus.broadcast(state.signal_bus, :updated, session_id, %{action: :lock_state, payload: payload}, source: :session_registry)
+    SignalBus.broadcast(
+      state.signal_bus,
+      :updated,
+      session_id,
+      %{action: :lock_state, payload: payload},
+      source: :session_registry
+    )
+
     :ok
   rescue
     _ -> :ok
@@ -418,12 +490,16 @@ defmodule JidoDocs.SessionRegistry do
     end)
   end
 
-  defp put_session(state, info), do: %{state | sessions: Map.put(state.sessions, info.session_id, info)}
+  defp put_session(state, info),
+    do: %{state | sessions: Map.put(state.sessions, info.session_id, info)}
 
   defp put_path_index(state, nil, _session_id), do: state
-  defp put_path_index(state, path, session_id), do: %{state | path_index: Map.put(state.path_index, path, session_id)}
 
-  defp put_monitor(state, ref, session_id), do: %{state | monitors: Map.put(state.monitors, ref, session_id)}
+  defp put_path_index(state, path, session_id),
+    do: %{state | path_index: Map.put(state.path_index, path, session_id)}
+
+  defp put_monitor(state, ref, session_id),
+    do: %{state | monitors: Map.put(state.monitors, ref, session_id)}
 
   defp path_session_id(state, path) do
     case Map.get(state.path_index, path) do
@@ -449,7 +525,8 @@ defmodule JidoDocs.SessionRegistry do
   defp validate_session_id(session_id) when is_binary(session_id) and session_id != "", do: :ok
 
   defp validate_session_id(session_id) do
-    {:error, Error.new(:invalid_params, "session_id must be non-empty binary", %{session_id: session_id})}
+    {:error,
+     Error.new(:invalid_params, "session_id must be non-empty binary", %{session_id: session_id})}
   end
 
   defp validate_path(path) when is_binary(path), do: {:ok, Path.expand(path)}
