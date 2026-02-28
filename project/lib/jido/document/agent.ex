@@ -91,11 +91,21 @@ defmodule Jido.Document.Agent do
             locks: MapSet.new(),
             signal_bus: SignalBus
 
+  @doc """
+  Starts a document session `GenServer`.
+  """
   @spec start_link(keyword()) :: GenServer.on_start()
   def start_link(opts \\ []) do
     GenServer.start_link(__MODULE__, opts, name: Keyword.get(opts, :name))
   end
 
+  @doc """
+  Executes a command against the session.
+
+  Supported modes:
+  - `:sync` (default): wait for result
+  - `:async`: enqueue command via cast and return `:ok`
+  """
   @spec command(GenServer.server(), action_name(), map() | keyword(), keyword()) ::
           Result.t() | :ok
   def command(server, action, params \\ %{}, opts \\ []) do
@@ -111,31 +121,55 @@ defmodule Jido.Document.Agent do
     end
   end
 
+  @doc """
+  Subscribes a process to session signals.
+  """
   @spec subscribe(GenServer.server(), pid()) :: :ok | {:error, Error.t()}
   def subscribe(server, subscriber \\ self()) when is_pid(subscriber) do
     GenServer.call(server, {:subscribe, subscriber})
   end
 
+  @doc """
+  Removes a process subscription from session signals.
+  """
   @spec unsubscribe(GenServer.server(), pid()) :: :ok
   def unsubscribe(server, subscriber \\ self()) when is_pid(subscriber) do
     GenServer.call(server, {:unsubscribe, subscriber})
   end
 
+  @doc """
+  Returns the full session state.
+  """
   @spec state(GenServer.server()) :: state()
   def state(server), do: GenServer.call(server, :state)
 
+  @doc """
+  Returns pending checkpoint recovery payload when available.
+  """
   @spec recovery_status(GenServer.server()) :: Checkpoint.payload() | nil
   def recovery_status(server), do: GenServer.call(server, :recovery_status)
 
+  @doc """
+  Recovers session state from an on-disk checkpoint.
+  """
   @spec recover(GenServer.server(), keyword()) :: Result.t()
   def recover(server, opts \\ []), do: GenServer.call(server, {:recover, opts})
 
+  @doc """
+  Discards pending recovery checkpoint for the session.
+  """
   @spec discard_recovery(GenServer.server()) :: Result.t()
   def discard_recovery(server), do: GenServer.call(server, :discard_recovery)
 
+  @doc """
+  Exports a compact trace bundle for diagnostics.
+  """
   @spec export_trace(GenServer.server(), keyword()) :: map()
   def export_trace(server, opts \\ []), do: GenServer.call(server, {:export_trace, opts})
 
+  @doc """
+  Lists orphan checkpoint files discoverable for manual recovery decisions.
+  """
   @spec list_recovery_candidates(keyword()) :: {:ok, [map()]} | {:error, Error.t()}
   def list_recovery_candidates(opts \\ []) do
     checkpoint_opts = checkpoint_opts_from(opts)
