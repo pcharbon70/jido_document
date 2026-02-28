@@ -37,25 +37,25 @@ Description: Finalize production readiness through stable APIs, complete docs, a
    [x] 8.1.2.3 Subtask - Define release-blocking criteria.  
    Description: Encode hard gates for quality and compatibility.
 
- [ ] 8.2 Section - Documentation, Examples, and Developer Experience  
+ [x] 8.2 Section - Documentation, Examples, and Developer Experience  
  Description: Make adoption straightforward with clear guides and runnable references.
 
-  [ ] 8.2.1 Task - Build end-to-end documentation set  
+  [x] 8.2.1 Task - Build end-to-end documentation set  
   Description: Cover architecture, setup, usage, and operations.
-   [ ] 8.2.1.1 Subtask - Write quickstart for creating and running sessions.  
+   [x] 8.2.1.1 Subtask - Write quickstart for creating and running sessions.  
    Description: Include minimal setup from a fresh Mix project.
-   [ ] 8.2.1.2 Subtask - Write integration boundary guides.  
+   [x] 8.2.1.2 Subtask - Write integration boundary guides.  
    Description: Document core API usage, session orchestration, and signal consumption patterns.
-   [ ] 8.2.1.3 Subtask - Write troubleshooting and diagnostics playbook.  
+   [x] 8.2.1.3 Subtask - Write troubleshooting and diagnostics playbook.  
    Description: Include common failure signatures and resolutions.
 
-  [ ] 8.2.2 Task - Ship runnable example applications and templates  
+  [x] 8.2.2 Task - Ship runnable example applications and templates  
   Description: Provide practical references for common integration patterns.
-   [ ] 8.2.2.1 Subtask - Create minimal API-driven sample.  
+   [x] 8.2.2.1 Subtask - Create minimal API-driven sample.  
    Description: Demonstrate core load/edit/render/save lifecycle.
-   [ ] 8.2.2.2 Subtask - Create session concurrency sample.  
+   [x] 8.2.2.2 Subtask - Create session concurrency sample.  
    Description: Demonstrate lock ownership, conflict responses, and takeover flow.
-   [ ] 8.2.2.3 Subtask - Create crash/recovery sample integration.  
+   [x] 8.2.2.3 Subtask - Create crash/recovery sample integration.  
    Description: Demonstrate reconnect-safe session restoration behavior.
 
  [ ] 8.3 Section - CI/CD and Release Automation  
