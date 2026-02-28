@@ -50,11 +50,11 @@ This directory contains the phase-by-phase implementation plan for `Jido.Documen
 - Preview rendering defaults to async mode with debounce.
 
 ## Cross-Phase Acceptance Scenarios
-- [ ] X-1 Description: A document with schema-driven frontmatter can be loaded, edited concurrently by multiple clients, and saved without data loss.
-- [ ] X-2 Description: Concurrent updates from two clients resolve deterministically with explicit conflict signaling.
-- [ ] X-3 Description: Rendering failures degrade gracefully while preserving the last known good preview.
-- [ ] X-4 Description: Undo/redo remains coherent across frontmatter and body edits through save/reload cycles.
-- [ ] X-5 Description: External file mutations are detected and handled without silent overwrite.
-- [ ] X-6 Description: Unauthorized workspace or path access is rejected and fully audited.
-- [ ] X-7 Description: Crash/restart during autosave and render jobs recovers session state without corruption.
-- [ ] X-8 Description: Release artifacts, docs, and examples remain reproducible across supported Elixir/OTP versions.
+- [x] X-1 Description: A document with schema-driven frontmatter can be loaded, edited concurrently by multiple clients, and saved without data loss.
+- [x] X-2 Description: Concurrent updates from two clients resolve deterministically with explicit conflict signaling.
+- [x] X-3 Description: Rendering failures degrade gracefully while preserving the last known good preview.
+- [x] X-4 Description: Undo/redo remains coherent across frontmatter and body edits through save/reload cycles.
+- [x] X-5 Description: External file mutations are detected and handled without silent overwrite.
+- [x] X-6 Description: Unauthorized workspace or path access is rejected and fully audited.
+- [x] X-7 Description: Crash/restart during autosave and render jobs recovers session state without corruption.
+- [x] X-8 Description: Release artifacts, docs, and examples remain reproducible across supported Elixir/OTP versions.

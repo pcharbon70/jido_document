@@ -1,11 +1,15 @@
 defmodule JidoDocument.MixProject do
   use Mix.Project
 
+  @version "0.1.0"
+
   def project do
     [
       app: :jido_document,
-      version: "0.1.0",
+      version: @version,
       elixir: "~> 1.18",
+      source_url: "https://github.com/pcharbon70/jido_document",
+      homepage_url: "https://github.com/pcharbon70/jido_document",
       description: description(),
       package: package(),
       docs: docs(),
@@ -51,6 +55,8 @@ defmodule JidoDocument.MixProject do
 
   defp package do
     [
+      name: "jido_document",
+      maintainers: ["Pascal Charbonneau"],
       licenses: ["Apache-2.0"],
       links: %{
         "GitHub" => "https://github.com/pcharbon70/jido_document"
@@ -59,6 +65,8 @@ defmodule JidoDocument.MixProject do
         "lib",
         "mix.exs",
         "README.md",
+        "CHANGELOG.md",
+        "LICENSE",
         "docs",
         "priv/api/public_api_manifest.exs",
         "priv/migration/templates"
@@ -69,6 +77,8 @@ defmodule JidoDocument.MixProject do
   defp docs do
     [
       main: "readme",
+      source_ref: "v#{@version}",
+      source_url: "https://github.com/pcharbon70/jido_document",
       extras: [
         "README.md",
         "docs/public-api.md",
