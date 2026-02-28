@@ -40,25 +40,25 @@ Description: Build atomic operation verbs, stable event contracts, and reliable 
    [x] 3.1.2.3 Subtask - Build error conversion helpers.  
    Description: Translate upstream exceptions into domain errors.
 
- [ ] 3.2 Section - Core Document Actions  
+ [x] 3.2 Section - Core Document Actions  
  Description: Implement file and mutation actions that enforce document invariants.
 
-  [ ] 3.2.1 Task - Implement `Load` and `Save` actions  
+  [x] 3.2.1 Task - Implement `Load` and `Save` actions  
   Description: Support robust document I/O for session lifecycle.
-   [ ] 3.2.1.1 Subtask - Implement secure path resolution on load.  
+   [x] 3.2.1.1 Subtask - Implement secure path resolution on load.  
    Description: Enforce workspace and traversal constraints.
-   [ ] 3.2.1.2 Subtask - Implement save with serialization and write safety hooks.  
+   [x] 3.2.1.2 Subtask - Implement save with serialization and write safety hooks.  
    Description: Integrate document serialization and error normalization.
-   [ ] 3.2.1.3 Subtask - Emit structured action metadata.  
+   [x] 3.2.1.3 Subtask - Emit structured action metadata.  
    Description: Capture bytes, duration, and revision in results.
 
-  [ ] 3.2.2 Task - Implement update and render action flows  
+  [x] 3.2.2 Task - Implement update and render action flows  
   Description: Support frontmatter/body mutation and preview generation operations.
-   [ ] 3.2.2.1 Subtask - Implement `UpdateFrontmatter` with schema validation.  
+   [x] 3.2.2.1 Subtask - Implement `UpdateFrontmatter` with schema validation.  
    Description: Apply merge/replace semantics and return updated document state.
-   [ ] 3.2.2.2 Subtask - Implement `UpdateBody` with revision tracking.  
+   [x] 3.2.2.2 Subtask - Implement `UpdateBody` with revision tracking.  
    Description: Preserve change metadata for history and undo.
-   [ ] 3.2.2.3 Subtask - Implement `Render` action integration.  
+   [x] 3.2.2.3 Subtask - Implement `Render` action integration.  
    Description: Return HTML/TOC/diagnostics payloads for preview updates.
 
  [ ] 3.3 Section - Signal Taxonomy and Subscription Model  
