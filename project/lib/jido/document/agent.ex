@@ -11,7 +11,18 @@ defmodule Jido.Document.Agent do
 
   alias Jido.Document.Action
   alias Jido.Document.Action.Result
-  alias Jido.Document.{Checkpoint, Document, Error, History, Persistence, Revision, SignalBus}
+
+  alias Jido.Document.{
+    Audit,
+    Checkpoint,
+    Document,
+    Error,
+    History,
+    Persistence,
+    Reliability,
+    Revision,
+    SignalBus
+  }
 
   @supported_actions [:load, :save, :update_frontmatter, :update_body, :render, :undo, :redo]
 
@@ -22,7 +33,8 @@ defmodule Jido.Document.Agent do
           action: action_name(),
           revision: non_neg_integer() | nil,
           timestamp: DateTime.t(),
-          correlation_id: String.t() | nil
+          correlation_id: String.t() | nil,
+          source: String.t() | nil
         }
 
   @type state :: %__MODULE__{
@@ -36,6 +48,14 @@ defmodule Jido.Document.Agent do
           checkpoint_on_edit: boolean(),
           revision_sequence: non_neg_integer(),
           latest_revision_entry: Revision.entry() | nil,
+          audit_events: [Audit.event()],
+          audit_limit: pos_integer(),
+          audit_sinks: [module() | (Audit.event() -> term())],
+          render_failure_streak: non_neg_integer(),
+          render_circuit_open_until_ms: integer() | nil,
+          render_circuit_threshold: pos_integer(),
+          render_circuit_cooldown_ms: pos_integer(),
+          degraded_mode: boolean(),
           preview: map() | nil,
           last_good_preview: map() | nil,
           render_fallback_active: boolean(),
@@ -55,6 +75,14 @@ defmodule Jido.Document.Agent do
             checkpoint_on_edit: true,
             revision_sequence: 0,
             latest_revision_entry: nil,
+            audit_events: [],
+            audit_limit: 500,
+            audit_sinks: [],
+            render_failure_streak: 0,
+            render_circuit_open_until_ms: nil,
+            render_circuit_threshold: 3,
+            render_circuit_cooldown_ms: 5_000,
+            degraded_mode: false,
             preview: nil,
             last_good_preview: nil,
             render_fallback_active: false,
@@ -105,6 +133,9 @@ defmodule Jido.Document.Agent do
   @spec discard_recovery(GenServer.server()) :: Result.t()
   def discard_recovery(server), do: GenServer.call(server, :discard_recovery)
 
+  @spec export_trace(GenServer.server(), keyword()) :: map()
+  def export_trace(server, opts \\ []), do: GenServer.call(server, {:export_trace, opts})
+
   @spec list_recovery_candidates(keyword()) :: {:ok, [map()]} | {:error, Error.t()}
   def list_recovery_candidates(opts \\ []) do
     checkpoint_opts = checkpoint_opts_from(opts)
@@ -126,6 +157,10 @@ defmodule Jido.Document.Agent do
     checkpoint_opts = checkpoint_opts_from(opts)
     autosave_interval_ms = normalize_autosave_interval(Keyword.get(opts, :autosave_interval_ms))
     checkpoint_on_edit = Keyword.get(opts, :checkpoint_on_edit, true)
+    audit_limit = max(Keyword.get(opts, :audit_limit, 500), 1)
+    audit_sinks = Keyword.get(opts, :audit_sinks, [])
+    render_circuit_threshold = max(Keyword.get(opts, :render_circuit_threshold, 3), 1)
+    render_circuit_cooldown_ms = max(Keyword.get(opts, :render_circuit_cooldown_ms, 5_000), 1)
 
     state = %__MODULE__{
       session_id: session_id,
@@ -133,7 +168,11 @@ defmodule Jido.Document.Agent do
       history_model: History.new(limit: history_limit),
       checkpoint_opts: checkpoint_opts,
       autosave_interval_ms: autosave_interval_ms,
-      checkpoint_on_edit: checkpoint_on_edit
+      checkpoint_on_edit: checkpoint_on_edit,
+      audit_limit: audit_limit,
+      audit_sinks: audit_sinks,
+      render_circuit_threshold: render_circuit_threshold,
+      render_circuit_cooldown_ms: render_circuit_cooldown_ms
     }
 
     state = load_pending_checkpoint(state)
@@ -168,14 +207,21 @@ defmodule Jido.Document.Agent do
   @impl true
   def handle_call({:subscribe, subscriber}, _from, state) do
     case SignalBus.subscribe(state.signal_bus, state.session_id, pid: subscriber) do
-      :ok -> {:reply, :ok, %{state | subscribers: MapSet.put(state.subscribers, subscriber)}}
-      {:error, %Error{} = error} -> {:reply, {:error, error}, state}
+      :ok ->
+        next_state = %{state | subscribers: MapSet.put(state.subscribers, subscriber)}
+        emit_connectivity_signal(next_state, :subscribed)
+        {:reply, :ok, next_state}
+
+      {:error, %Error{} = error} ->
+        {:reply, {:error, error}, state}
     end
   end
 
   def handle_call({:unsubscribe, subscriber}, _from, state) do
     :ok = SignalBus.unsubscribe(state.signal_bus, state.session_id, pid: subscriber)
-    {:reply, :ok, %{state | subscribers: MapSet.delete(state.subscribers, subscriber)}}
+    next_state = %{state | subscribers: MapSet.delete(state.subscribers, subscriber)}
+    emit_connectivity_signal(next_state, :unsubscribed)
+    {:reply, :ok, next_state}
   end
 
   def handle_call(:state, _from, state), do: {:reply, state, state}
@@ -189,6 +235,13 @@ defmodule Jido.Document.Agent do
   def handle_call(:discard_recovery, _from, state) do
     {result, state} = discard_pending_checkpoint(state)
     {:reply, result, state}
+  end
+
+  def handle_call({:export_trace, opts}, _from, state) do
+    opts = normalize_map(opts)
+    limit = max(Map.get(opts, :limit, 200), 1)
+    trace = build_trace_export(state, limit)
+    {:reply, trace, state}
   end
 
   def handle_call({:command, action, params, opts}, _from, state) do
@@ -223,6 +276,7 @@ defmodule Jido.Document.Agent do
   end
 
   defp execute_command(state, action, params, opts) do
+    started = System.monotonic_time(:microsecond)
     params = normalize_map(params)
     opts = normalize_map(opts)
     params = inject_command_defaults(state, action, params)
@@ -238,33 +292,47 @@ defmodule Jido.Document.Agent do
           execute_action_command(state, previous_state, action, params, opts)
         end
 
+      emit_agent_metrics(next_state, action, result, started)
       {result, unlock_if_needed(next_state, action)}
     else
       {:error, %Error{} = error} ->
         result = Result.error(error, %{action: action, session_id: state.session_id})
+        emit_agent_metrics(state, action, result, started)
         {result, state}
     end
   end
 
   defp execute_action_command(state, previous_state, action, params, opts) do
+    actor = command_actor(opts)
+
     context = %{
       session_id: state.session_id,
       path: Map.get(params, :path),
       document: Map.get(params, :document, state.document),
+      actor: actor,
       options: Map.get(opts, :context_options, %{}),
       correlation_id: Map.get(opts, :correlation_id),
       idempotency_key: Map.get(opts, :idempotency_key),
       metadata: %{action: action}
     }
 
-    result = Action.execute(action_module(action), params, context)
+    result =
+      execute_with_retry(
+        fn -> Action.execute(action_module(action), params, context) end,
+        action,
+        opts
+      )
 
     case result do
       %Result{status: :ok, value: value} = ok_result ->
-        next_state = apply_success(state, action, value, ok_result.metadata)
-        {ok_result, next_state}
+        metadata = enrich_metadata(ok_result.metadata, actor, opts)
+        next_state = apply_success(state, action, value, metadata)
+        {%{ok_result | metadata: metadata}, next_state}
 
       %Result{status: :error, error: error} = error_result ->
+        metadata = enrich_metadata(error_result.metadata, actor, opts)
+        state = maybe_emit_authorization_denied(state, action, error, metadata)
+
         if action == :render do
           fallback_value = %{
             preview: choose_fallback_preview(state, error),
@@ -273,17 +341,17 @@ defmodule Jido.Document.Agent do
           }
 
           recovered_state =
-            apply_failure(state, action, error, error_result.metadata, true)
+            apply_failure(state, action, error, metadata, true)
 
           next_state =
             apply_success(
               recovered_state,
               :render,
               fallback_value,
-              Map.put(error_result.metadata, :fallback, true)
+              Map.put(metadata, :fallback, true)
             )
 
-          {Result.ok(fallback_value, Map.put(error_result.metadata, :fallback, true)), next_state}
+          {Result.ok(fallback_value, Map.put(metadata, :fallback, true)), next_state}
         else
           rollback? = Map.get(opts, :optimistic, true)
 
@@ -295,9 +363,9 @@ defmodule Jido.Document.Agent do
             end
 
           next_state =
-            apply_failure(recovered_state, action, error, error_result.metadata, rollback?)
+            apply_failure(recovered_state, action, error, metadata, rollback?)
 
-          {error_result, next_state}
+          {%{error_result | metadata: metadata}, next_state}
         end
     end
   end
@@ -305,7 +373,10 @@ defmodule Jido.Document.Agent do
   defp execute_history_command(state, action, opts) do
     started = System.monotonic_time(:microsecond)
     correlation_id = Map.get(opts, :correlation_id, default_correlation_id())
-    metadata = history_command_metadata(action, correlation_id, opts)
+    actor = command_actor(opts)
+
+    metadata =
+      history_command_metadata(action, correlation_id, opts) |> enrich_metadata(actor, opts)
 
     cond do
       state.document == nil ->
@@ -379,6 +450,14 @@ defmodule Jido.Document.Agent do
       action == :save and locked?(state, :render) ->
         {:error, Error.new(:busy, "render in progress; save deferred", %{action: action})}
 
+      action == :render and render_circuit_open?(state) ->
+        {:error,
+         Error.new(:busy, "render circuit open; degraded mode active", %{
+           action: action,
+           degraded_mode: true,
+           retry_after_ms: render_retry_after_ms(state)
+         })}
+
       action == :render and locked?(state, :render) ->
         {:error, Error.new(:busy, "render already in progress", %{action: action})}
 
@@ -439,6 +518,7 @@ defmodule Jido.Document.Agent do
       end
 
     state = apply_checkpoint_policy(state, action, metadata)
+    state = apply_render_success_reliability(state, action, metadata)
     {state, revision_entry} = bump_revision_sequence(state, action, metadata)
     signal_metadata = Map.put(metadata, :revision_entry, revision_entry)
 
@@ -471,13 +551,24 @@ defmodule Jido.Document.Agent do
       action: action,
       revision: current_revision(state),
       timestamp: DateTime.utc_now(),
-      correlation_id: Map.get(signal_metadata, :correlation_id)
+      correlation_id: Map.get(signal_metadata, :correlation_id),
+      source: metadata_source(signal_metadata)
     }
 
-    %{state | history: [entry | state.history]}
+    state =
+      %{state | history: [entry | state.history]}
+      |> append_audit_event(:action, action, :ok, signal_metadata, %{
+        payload: compact_payload(value),
+        lineage: lineage_for(state, action),
+        history_depth: length(state.history)
+      })
+
+    state
   end
 
   defp apply_failure(state, action, %Error{} = error, metadata, rollback?) do
+    state = apply_render_failure_reliability(state, action, error, metadata)
+
     _ =
       emit_signal(state, :failed, %{
         action: action,
@@ -487,7 +578,11 @@ defmodule Jido.Document.Agent do
         metadata: metadata
       })
 
-    state
+    append_audit_event(state, :action, action, audit_status_for_error(error), metadata, %{
+      error: Error.to_map(error),
+      rollback: rollback?,
+      lineage: lineage_for(state, action)
+    })
   end
 
   defp signal_type_for_success(:load), do: :loaded
@@ -531,9 +626,10 @@ defmodule Jido.Document.Agent do
 
   defp compact_payload(%{} = value) do
     value
-    |> Map.drop([:document, :preview, :history_model])
+    |> Map.drop([:document, :preview, :history_model, :safety])
     |> maybe_put(:document_revision, value[:document] && value.document.revision)
     |> maybe_put(:history, value[:history])
+    |> maybe_put(:safety, summarize_safety(value[:safety]))
     |> maybe_put(
       :preview_summary,
       value[:preview] && %{toc_size: length(value.preview.toc || [])}
@@ -541,6 +637,15 @@ defmodule Jido.Document.Agent do
   end
 
   defp compact_payload(_), do: %{}
+
+  defp summarize_safety(%{findings: findings}) when is_list(findings) do
+    severities =
+      findings |> Enum.group_by(& &1.severity) |> Map.new(fn {k, v} -> {k, length(v)} end)
+
+    %{findings_count: length(findings), severities: severities}
+  end
+
+  defp summarize_safety(_), do: nil
 
   defp current_revision(%__MODULE__{document: %Document{revision: revision}}), do: revision
   defp current_revision(_), do: nil
@@ -763,7 +868,8 @@ defmodule Jido.Document.Agent do
         action: :load,
         revision: current_revision(recovered_state),
         timestamp: DateTime.utc_now(),
-        correlation_id: Map.get(metadata, :correlation_id)
+        correlation_id: Map.get(metadata, :correlation_id),
+        source: metadata_source(metadata)
       }
 
       result =
@@ -776,7 +882,15 @@ defmodule Jido.Document.Agent do
           metadata
         )
 
-      {result, %{recovered_state | history: [entry | recovered_state.history]}}
+      recovered_state =
+        recovered_state
+        |> Map.update!(:history, &[entry | &1])
+        |> append_audit_event(:action, :recover, :ok, metadata, %{
+          recovered: true,
+          lineage: lineage_for(recovered_state, :recover)
+        })
+
+      {result, recovered_state}
     else
       {:error, %Error{} = error} ->
         metadata = finish_op_metadata(metadata, started)
@@ -801,7 +915,11 @@ defmodule Jido.Document.Agent do
             metadata: metadata
           })
 
-        {Result.ok(%{discarded: true}, metadata), %{state | pending_checkpoint: nil}}
+        state =
+          %{state | pending_checkpoint: nil}
+          |> append_audit_event(:action, :discard_recovery, :ok, metadata, %{discarded: true})
+
+        {Result.ok(%{discarded: true}, metadata), state}
 
       {:error, %Error{} = error} ->
         metadata = finish_op_metadata(metadata, started)
@@ -909,6 +1027,28 @@ defmodule Jido.Document.Agent do
     Map.put(metadata, :duration_us, System.monotonic_time(:microsecond) - started)
   end
 
+  defp maybe_emit_authorization_denied(state, action, %Error{code: :forbidden} = error, metadata) do
+    actor = Map.get(error.details, :actor)
+
+    _ =
+      emit_signal(state, :failed, %{
+        action: :authorize,
+        revision: current_revision(state),
+        denied_action: action,
+        error: Error.to_map(error),
+        actor: actor,
+        rollback: false,
+        metadata: metadata
+      })
+
+    append_audit_event(state, :authorize, action, :denied, metadata, %{
+      error: Error.to_map(error),
+      actor: actor
+    })
+  end
+
+  defp maybe_emit_authorization_denied(state, _action, _error, _metadata), do: state
+
   defp bump_revision_sequence(state, action, metadata) do
     attrs = %{
       document_revision: current_revision(state),
@@ -916,7 +1056,9 @@ defmodule Jido.Document.Agent do
       correlation_id: Map.get(metadata, :correlation_id),
       metadata: %{
         idempotency: Map.get(metadata, :idempotency),
-        idempotency_key: Map.get(metadata, :idempotency_key)
+        idempotency_key: Map.get(metadata, :idempotency_key),
+        actor: Map.get(metadata, :actor),
+        lineage: lineage_for(state, action)
       }
     }
 
@@ -941,9 +1083,272 @@ defmodule Jido.Document.Agent do
     }
   end
 
+  defp append_audit_event(state, event_type, action, status, metadata, payload) do
+    attrs = %{
+      event_type: event_type,
+      action: action,
+      status: status,
+      session_id: state.session_id,
+      correlation_id: Map.get(metadata, :correlation_id),
+      actor: Map.get(metadata, :actor),
+      source: metadata_source(metadata),
+      revision_id: revision_id_from_metadata(metadata),
+      document_revision: current_revision(state),
+      metadata: payload
+    }
+
+    case Audit.build(attrs) do
+      {:ok, event} ->
+        _ = Audit.dispatch(event, state.audit_sinks)
+        events = [event | state.audit_events] |> Enum.take(state.audit_limit)
+        %{state | audit_events: events}
+
+      {:error, _error} ->
+        state
+    end
+  end
+
+  defp metadata_source(metadata) do
+    case Map.get(metadata, :source) do
+      source when is_binary(source) and source != "" ->
+        source
+
+      source when is_atom(source) ->
+        Atom.to_string(source)
+
+      _ ->
+        actor = Map.get(metadata, :actor)
+        actor_id = actor_id(actor)
+        if is_binary(actor_id) and actor_id != "", do: "actor:" <> actor_id, else: "agent"
+    end
+  end
+
+  defp actor_id(actor) when is_map(actor), do: Map.get(actor, :id) || Map.get(actor, "id")
+  defp actor_id(_), do: nil
+
+  defp revision_id_from_metadata(metadata) do
+    case Map.get(metadata, :revision_entry) do
+      %{revision_id: revision_id} -> revision_id
+      _ -> nil
+    end
+  end
+
+  defp lineage_for(state, action) do
+    current_sequence = state.revision_sequence
+
+    %{
+      action: action,
+      current_sequence: current_sequence,
+      parent_revision_id: parent_revision_id(state.session_id, current_sequence),
+      recent_actions:
+        state.history
+        |> Enum.take(5)
+        |> Enum.map(&Map.take(&1, [:action, :revision, :source, :correlation_id]))
+    }
+  end
+
+  defp parent_revision_id(_session_id, sequence) when sequence <= 1, do: nil
+  defp parent_revision_id(session_id, sequence), do: "#{session_id}-#{sequence - 1}"
+
+  defp audit_status_for_error(%Error{code: :forbidden}), do: :denied
+  defp audit_status_for_error(_), do: :error
+
+  defp build_trace_export(state, limit) do
+    %{
+      session_id: state.session_id,
+      document_path: state.document && state.document.path,
+      current_revision: current_revision(state),
+      latest_revision_entry: state.latest_revision_entry,
+      history: state.history |> Enum.take(limit),
+      audit_events: state.audit_events |> Enum.take(limit)
+    }
+  end
+
+  defp execute_with_retry(fun, action, opts) do
+    retry_opts = retry_opts_for_action(action, opts)
+
+    if retry_opts == nil do
+      fun.()
+    else
+      Reliability.with_retry(fun, retry_opts)
+    end
+  end
+
+  defp retry_opts_for_action(action, opts) do
+    if action in [:load, :save, :render] do
+      candidate = Map.get(opts, :retry) || get_in(opts, [:context_options, :retry])
+
+      cond do
+        candidate == false ->
+          nil
+
+        is_map(candidate) ->
+          candidate
+
+        is_list(candidate) ->
+          Map.new(candidate)
+
+        true ->
+          %{max_attempts: 3, base_delay_ms: 25, max_delay_ms: 300, jitter_pct: 0.2}
+      end
+    else
+      nil
+    end
+  end
+
+  defp apply_render_success_reliability(state, :render, metadata) do
+    if Map.get(metadata, :fallback, false) do
+      state
+    else
+      state =
+        %{
+          state
+          | render_failure_streak: 0,
+            render_circuit_open_until_ms: nil
+        }
+
+      if state.degraded_mode do
+        _ =
+          emit_signal(state, :updated, %{
+            action: :degraded_mode_recovered,
+            revision: current_revision(state),
+            payload: %{component: :render, state: :closed},
+            metadata: metadata
+          })
+
+        %{state | degraded_mode: false}
+      else
+        state
+      end
+    end
+  end
+
+  defp apply_render_success_reliability(state, _action, _metadata), do: state
+
+  defp apply_render_failure_reliability(state, :render, _error, metadata) do
+    streak = state.render_failure_streak + 1
+    now_ms = now_ms()
+
+    if streak >= state.render_circuit_threshold do
+      open_until = now_ms + state.render_circuit_cooldown_ms
+
+      state = %{
+        state
+        | render_failure_streak: streak,
+          render_circuit_open_until_ms: open_until,
+          degraded_mode: true
+      }
+
+      _ =
+        emit_signal(state, :updated, %{
+          action: :degraded_mode,
+          revision: current_revision(state),
+          payload: %{
+            component: :render,
+            state: :open,
+            failure_streak: streak,
+            retry_after_ms: state.render_circuit_cooldown_ms
+          },
+          metadata: metadata
+        })
+
+      state
+    else
+      %{state | render_failure_streak: streak}
+    end
+  end
+
+  defp apply_render_failure_reliability(state, _action, _error, _metadata), do: state
+
+  defp render_circuit_open?(state) do
+    case state.render_circuit_open_until_ms do
+      nil -> false
+      open_until -> now_ms() < open_until
+    end
+  end
+
+  defp render_retry_after_ms(state) do
+    case state.render_circuit_open_until_ms do
+      nil -> 0
+      open_until -> max(open_until - now_ms(), 0)
+    end
+  end
+
+  defp emit_connectivity_signal(state, transition) do
+    _ =
+      emit_signal(state, :updated, %{
+        action: :connectivity,
+        revision: current_revision(state),
+        payload: %{transition: transition, subscribers: MapSet.size(state.subscribers)},
+        metadata: %{source: :agent}
+      })
+
+    :ok
+  end
+
+  defp emit_agent_metrics(state, action, result, started_us) do
+    duration_us = System.monotonic_time(:microsecond) - started_us
+
+    status =
+      case result do
+        %Result{status: :ok} -> :ok
+        _ -> :error
+      end
+
+    metadata = %{
+      action: action,
+      session_id: state.session_id,
+      status: status,
+      degraded_mode: state.degraded_mode,
+      subscribers: MapSet.size(state.subscribers),
+      queue_stats: render_queue_stats()
+    }
+
+    if Code.ensure_loaded?(:telemetry) and function_exported?(:telemetry, :execute, 3) do
+      apply(:telemetry, :execute, [
+        [:jido_document, :agent, :command],
+        %{duration_us: duration_us},
+        metadata
+      ])
+    end
+
+    :ok
+  end
+
+  defp render_queue_stats do
+    case Jido.Document.Render.JobQueue.stats() do
+      stats when is_map(stats) ->
+        %{
+          queued_sessions: Map.get(stats, :queued_sessions),
+          queue_max_size: Map.get(stats, :max_queue_size)
+        }
+
+      _ ->
+        %{}
+    end
+  rescue
+    _ -> %{}
+  end
+
+  defp enrich_metadata(metadata, actor, opts) do
+    source = Map.get(opts, :source) || get_in(opts, [:context_options, :source]) || :agent
+
+    metadata
+    |> maybe_put(:actor, actor)
+    |> maybe_put(:source, source)
+  end
+
   defp normalize_map(%{} = map), do: map
   defp normalize_map(list) when is_list(list), do: Map.new(list)
   defp normalize_map(_), do: %{}
+
+  defp command_actor(opts) do
+    top_level_actor = Map.get(opts, :actor)
+    context_actor = get_in(opts, [:context_options, :actor])
+    top_level_actor || context_actor
+  end
+
+  defp now_ms, do: System.system_time(:millisecond)
 
   defp inject_command_defaults(state, :save, params) do
     params =
