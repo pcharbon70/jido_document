@@ -12,7 +12,7 @@ defmodule JidoDocs.Frontmatter do
         }
 
   @type validation_error :: %{
-          path: [atom()],
+          path: [atom() | String.t()],
           message: String.t(),
           value: term()
         }

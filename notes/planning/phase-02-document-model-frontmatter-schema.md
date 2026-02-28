@@ -58,25 +58,25 @@ Description: Build the canonical document representation with deterministic pars
    [x] 2.2.2.3 Subtask - Implement parse/serialize roundtrip checks.  
    Description: Ensure no silent loss of supported metadata fields.
 
- [ ] 2.3 Section - Schema and Field Definition System  
+ [x] 2.3 Section - Schema and Field Definition System  
  Description: Provide schema-driven metadata definitions for validation and UI generation.
 
-  [ ] 2.3.1 Task - Implement `JidoDocs.Schema` behavior and `JidoDocs.Field` struct  
+  [x] 2.3.1 Task - Implement `JidoDocs.Schema` behavior and `JidoDocs.Field` struct  
   Description: Define declarative field contracts that adapters can consume.
-   [ ] 2.3.1.1 Subtask - Add field attributes (`name`, `type`, `label`, `required`, `default`, `options`).  
+   [x] 2.3.1.1 Subtask - Add field attributes (`name`, `type`, `label`, `required`, `default`, `options`).  
    Description: Capture enough information for both runtime validation and form rendering.
-   [ ] 2.3.1.2 Subtask - Add primitive and composite type support.  
+   [x] 2.3.1.2 Subtask - Add primitive and composite type support.  
    Description: Support `:string`, `:integer`, `:boolean`, arrays, and enums.
-   [ ] 2.3.1.3 Subtask - Support custom validator hooks.  
+   [x] 2.3.1.3 Subtask - Support custom validator hooks.  
    Description: Allow domain-specific constraints beyond type checks.
 
-  [ ] 2.3.2 Task - Implement schema validation engine  
+  [x] 2.3.2 Task - Implement schema validation engine  
   Description: Validate frontmatter maps against schema definitions with precise errors.
-   [ ] 2.3.2.1 Subtask - Add type coercion where safe and explicit.  
+   [x] 2.3.2.1 Subtask - Add type coercion where safe and explicit.  
    Description: Convert compatible scalar values while flagging ambiguous cases.
-   [ ] 2.3.2.2 Subtask - Aggregate field-level errors with paths.  
+   [x] 2.3.2.2 Subtask - Aggregate field-level errors with paths.  
    Description: Return structured diagnostics for UI and API consumers.
-   [ ] 2.3.2.3 Subtask - Emit unknown/extra key diagnostics policy.  
+   [x] 2.3.2.3 Subtask - Emit unknown/extra key diagnostics policy.  
    Description: Configure warn, ignore, or reject behavior.
 
  [ ] 2.4 Section - Mutation and Canonicalization Utilities  

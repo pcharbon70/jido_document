@@ -7,10 +7,11 @@ defmodule JidoDocs.Document do
   """
 
   alias JidoDocs.Frontmatter
+  alias JidoDocs.Schema
 
   @typedoc "Structured invariant error with field path context."
   @type validation_error :: %{
-          path: [atom()],
+          path: [atom() | String.t()],
           message: String.t(),
           value: term()
         }
@@ -219,36 +220,19 @@ defmodule JidoDocs.Document do
   defp check_schema_compatibility(errors, %{schema: nil}), do: errors
 
   defp check_schema_compatibility(errors, %{schema: schema, frontmatter: frontmatter}) do
-    if schema_compatible?(schema, frontmatter) do
-      errors
-    else
-      [error([:frontmatter], "is incompatible with schema field contract", frontmatter) | errors]
+    case Schema.validate_frontmatter(frontmatter, schema, unknown_keys: :ignore) do
+      {:ok, _normalized, _warnings} ->
+        errors
+
+      {:error, schema_errors} ->
+        converted =
+          Enum.map(schema_errors, fn schema_error ->
+            error(schema_error.path, schema_error.message, schema_error.value)
+          end)
+
+        converted ++ errors
     end
   end
-
-  defp schema_compatible?(schema, frontmatter) do
-    Code.ensure_loaded?(schema) and
-      function_exported?(schema, :fields, 0) and
-      fields_valid?(schema.fields(), frontmatter)
-  end
-
-  defp fields_valid?(fields, frontmatter) when is_list(fields) and is_map(frontmatter) do
-    Enum.all?(fields, fn
-      %{name: name} when is_atom(name) ->
-        true
-
-      {name, _type} when is_atom(name) ->
-        true
-
-      name when is_atom(name) ->
-        true
-
-      _ ->
-        false
-    end)
-  end
-
-  defp fields_valid?(_, _), do: false
 
   defp error(path, message, value) do
     %{path: path, message: message, value: value}
