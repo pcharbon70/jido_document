@@ -16,25 +16,25 @@ Back to index: [README](./README.md)
 [ ] 4 Phase 4 - Markdown Rendering, Preview, and Change Propagation  
 Description: Deliver high-quality markdown rendering with performant, reliable preview update behavior.
 
- [ ] 4.1 Section - Renderer Pipeline Foundation  
+ [x] 4.1 Section - Renderer Pipeline Foundation  
  Description: Build a configurable rendering pipeline with stable output contracts.
 
-  [ ] 4.1.1 Task - Implement `JidoDocs.Renderer` pipeline with `Mdex`  
+  [x] 4.1.1 Task - Implement `JidoDocs.Renderer` pipeline with `Mdex`  
   Description: Convert markdown body into HTML and structured preview artifacts.
-   [ ] 4.1.1.1 Subtask - Configure default markdown extensions and parsing options.  
+   [x] 4.1.1.1 Subtask - Configure default markdown extensions and parsing options.  
    Description: Ensure predictable markdown feature support across adapters.
-   [ ] 4.1.1.2 Subtask - Integrate syntax-highlighting plugin path.  
+   [x] 4.1.1.2 Subtask - Integrate syntax-highlighting plugin path.  
    Description: Render fenced code blocks with configurable themes.
-   [ ] 4.1.1.3 Subtask - Exclude frontmatter from preview rendering.  
+   [x] 4.1.1.3 Subtask - Exclude frontmatter from preview rendering.  
    Description: Keep metadata editing isolated from body presentation.
 
-  [ ] 4.1.2 Task - Define renderer output schema  
+  [x] 4.1.2 Task - Define renderer output schema  
   Description: Standardize payload format for adapter consumption.
-   [ ] 4.1.2.1 Subtask - Include `html`, `toc`, and `diagnostics` fields.  
+   [x] 4.1.2.1 Subtask - Include `html`, `toc`, and `diagnostics` fields.  
    Description: Provide full preview context to clients.
-   [ ] 4.1.2.2 Subtask - Add stable heading IDs and anchor metadata.  
+   [x] 4.1.2.2 Subtask - Add stable heading IDs and anchor metadata.  
    Description: Support deep-linking and synchronized navigation.
-   [ ] 4.1.2.3 Subtask - Add deterministic cache key generation.  
+   [x] 4.1.2.3 Subtask - Add deterministic cache key generation.  
    Description: Enable render memoization without stale responses.
 
  [ ] 4.2 Section - Incremental Rendering and Scheduling  
