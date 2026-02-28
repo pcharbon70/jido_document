@@ -13,7 +13,7 @@ Back to index: [README](./README.md)
 - Document API is pure and UI-agnostic.
 - Validation returns structured errors with field paths.
 
-[ ] 2 Phase 2 - Document Model, Frontmatter, and Schema  
+[x] 2 Phase 2 - Document Model, Frontmatter, and Schema  
 Description: Build the canonical document representation with deterministic parse, serialize, and validation behavior.
 
  [x] 2.1 Section - Document Struct and Invariants  
@@ -100,23 +100,23 @@ Description: Build the canonical document representation with deterministic pars
    [x] 2.4.2.3 Subtask - Preserve body content fidelity.  
    Description: Ensure canonicalization does not alter markdown meaning.
 
- [ ] 2.5 Section - Phase 2 Integration Tests  
+ [x] 2.5 Section - Phase 2 Integration Tests  
  Description: Validate parse, serialize, schema, and mutation behavior end-to-end.
 
-  [ ] 2.5.1 Task - Document parse/serialize integration tests  
+  [x] 2.5.1 Task - Document parse/serialize integration tests  
   Description: Verify robust behavior across syntax variants and malformed input.
-   [ ] 2.5.1.1 Subtask - Test YAML, TOML, and no-frontmatter cases.  
+   [x] 2.5.1.1 Subtask - Test YAML, TOML, and no-frontmatter cases.  
    Description: Ensure correct split and metadata extraction.
-   [ ] 2.5.1.2 Subtask - Test malformed delimiter and parser errors.  
+   [x] 2.5.1.2 Subtask - Test malformed delimiter and parser errors.  
    Description: Verify actionable diagnostics are returned.
-   [ ] 2.5.1.3 Subtask - Test deterministic roundtrip output.  
+   [x] 2.5.1.3 Subtask - Test deterministic roundtrip output.  
    Description: Assert stable serialization after repeated load/save cycles.
 
-  [ ] 2.5.2 Task - Schema and mutation integration tests  
+  [x] 2.5.2 Task - Schema and mutation integration tests  
   Description: Validate update flows and schema constraints together.
-   [ ] 2.5.2.1 Subtask - Test valid and invalid field updates.  
+   [x] 2.5.2.1 Subtask - Test valid and invalid field updates.  
    Description: Confirm expected coercion and errors.
-   [ ] 2.5.2.2 Subtask - Test unknown key policy behavior.  
+   [x] 2.5.2.2 Subtask - Test unknown key policy behavior.  
    Description: Validate warn/ignore/reject modes.
-   [ ] 2.5.2.3 Subtask - Test revision and dirty-state transitions.  
+   [x] 2.5.2.3 Subtask - Test revision and dirty-state transitions.  
    Description: Ensure mutation tracking is consistent.
