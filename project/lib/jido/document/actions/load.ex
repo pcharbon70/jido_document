@@ -6,7 +6,7 @@ defmodule Jido.Document.Actions.Load do
 
   @behaviour Jido.Document.Action
 
-  alias Jido.Document.{Document, Error, PathPolicy}
+  alias Jido.Document.{Document, Error, PathPolicy, Persistence}
   alias Jido.Document.Action.Context
 
   @impl true
@@ -22,13 +22,15 @@ defmodule Jido.Document.Actions.Load do
 
     with {:ok, resolved_path} <- PathPolicy.resolve_path(path, context.options),
          {:ok, raw} <- read_file(resolved_path),
-         {:ok, document} <- Document.parse(raw, path: resolved_path, schema: schema) do
+         {:ok, document} <- Document.parse(raw, path: resolved_path, schema: schema),
+         {:ok, disk_snapshot} <- Persistence.snapshot(resolved_path) do
       {:ok,
        %{
          document: document,
          path: resolved_path,
          bytes: byte_size(raw),
-         revision: document.revision
+         revision: document.revision,
+         disk_snapshot: disk_snapshot
        }}
     end
   end

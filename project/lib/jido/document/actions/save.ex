@@ -5,7 +5,7 @@ defmodule Jido.Document.Actions.Save do
 
   @behaviour Jido.Document.Action
 
-  alias Jido.Document.{Document, Error, PathPolicy}
+  alias Jido.Document.{Document, Error, PathPolicy, Persistence}
   alias Jido.Document.Action.Context
 
   @impl true
@@ -18,14 +18,17 @@ defmodule Jido.Document.Actions.Save do
   def run(params, %Context{} = context) do
     with {:ok, document} <- fetch_document(params, context),
          {:ok, resolved_path} <- resolve_save_path(params, context, document),
+         :ok <- ensure_no_divergence(params, resolved_path),
          {:ok, serialized} <- Document.serialize(document, Map.get(params, :serialize_opts, [])),
-         :ok <- write_file_safely(resolved_path, serialized) do
+         {:ok, disk_snapshot} <- write_file_safely(resolved_path, serialized, params),
+         :ok <- persist_revision_sidecar(params, resolved_path) do
       {:ok,
        %{
          document: Document.mark_clean(document),
          path: resolved_path,
          bytes: byte_size(serialized),
-         revision: document.revision
+         revision: document.revision,
+         disk_snapshot: disk_snapshot
        }}
     end
   end
@@ -43,27 +46,96 @@ defmodule Jido.Document.Actions.Save do
     PathPolicy.resolve_path(path, context.options)
   end
 
-  defp write_file_safely(path, content) do
-    with :ok <- File.mkdir_p(Path.dirname(path)),
-         {:ok, tmp_path} <- write_temp_file(path, content),
-         :ok <- File.rename(tmp_path, path) do
-      :ok
-    else
-      {:error, reason} ->
-        {:error,
-         Error.new(:filesystem_error, "failed to write file", %{path: path, reason: reason})}
+  defp ensure_no_divergence(params, path) do
+    baseline = Map.get(params, :baseline)
+    on_conflict = Map.get(params, :on_conflict, :reject)
 
-      :error ->
-        {:error, Error.new(:filesystem_error, "failed to rename temp file", %{path: path})}
+    baseline = normalize_baseline(path, baseline)
+
+    case Persistence.detect_divergence(path, baseline) do
+      :ok ->
+        :ok
+
+      {:error, %Error{code: :conflict} = error} when on_conflict == :overwrite ->
+        _ = error
+        :ok
+
+      {:error, %Error{code: :conflict} = error} when on_conflict == :merge_hook ->
+        run_merge_hook(params, path, error)
+
+      {:error, %Error{code: :conflict} = error} ->
+        {:error, enrich_conflict_error(path, error)}
+
+      {:error, %Error{} = error} ->
+        {:error, error}
     end
   end
 
-  defp write_temp_file(path, content) do
-    tmp_path = path <> ".tmp." <> Integer.to_string(System.unique_integer([:positive]))
+  defp run_merge_hook(params, path, %Error{} = error) do
+    case Map.get(params, :merge_hook) do
+      hook when is_function(hook, 3) ->
+        case hook.(path, Map.get(params, :baseline), error.details) do
+          :ok ->
+            :ok
 
-    case File.write(tmp_path, content) do
-      :ok -> {:ok, tmp_path}
-      {:error, reason} -> {:error, reason}
+          {:ok, _merged_content} ->
+            :ok
+
+          {:error, reason} ->
+            {:error, Error.from_reason(reason, %{path: path, conflict: error.details})}
+
+          other ->
+            {:error,
+             Error.new(:conflict, "merge hook returned invalid response", %{
+               path: path,
+               value: other
+             })}
+        end
+
+      _ ->
+        {:error,
+         Error.new(:conflict, "save blocked by on-disk divergence", %{
+           path: path,
+           conflict: error.details,
+           remediation: [:reload, :overwrite, :merge_hook]
+         })}
     end
+  end
+
+  defp write_file_safely(path, content, params) do
+    preserve_metadata? = Map.get(params, :preserve_metadata, true)
+    atomic_opts = Map.get(params, :atomic_write_opts, [])
+
+    Persistence.atomic_write(
+      path,
+      content,
+      Keyword.merge([preserve_metadata: preserve_metadata?], atomic_opts)
+    )
+  end
+
+  defp persist_revision_sidecar(params, path) do
+    case Map.get(params, :revision_metadata) do
+      metadata when is_map(metadata) -> Persistence.write_revision_sidecar(path, metadata)
+      _ -> :ok
+    end
+  end
+
+  defp normalize_baseline(path, %{} = baseline) do
+    baseline_path = Map.get(baseline, :path)
+
+    if is_binary(baseline_path) and Path.expand(path) == Path.expand(baseline_path) do
+      baseline
+    else
+      nil
+    end
+  end
+
+  defp normalize_baseline(_path, _baseline), do: nil
+
+  defp enrich_conflict_error(path, %Error{} = error) do
+    Error.merge_details(error, %{
+      path: path,
+      remediation: [:reload, :overwrite, :merge_hook]
+    })
   end
 end
