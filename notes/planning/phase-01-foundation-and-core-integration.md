@@ -58,25 +58,25 @@ Description: Establish project skeleton, compile-safe module boundaries, and det
    [x] 1.2.2.3 Subtask - Normalize external errors into domain errors.  
    Description: Return stable reason codes regardless of upstream library format.
 
- [ ] 1.3 Section - Runtime Configuration and Environment Profiles  
+ [x] 1.3 Section - Runtime Configuration and Environment Profiles  
  Description: Provide validated defaults and predictable override precedence.
 
-  [ ] 1.3.1 Task - Implement `JidoDocs.Config` schema and defaults  
+  [x] 1.3.1 Task - Implement `JidoDocs.Config` schema and defaults  
   Description: Capture all configurable knobs for sessions, parsing, rendering, and persistence.
-   [ ] 1.3.1.1 Subtask - Add parser and delimiter defaults.  
+   [x] 1.3.1.1 Subtask - Add parser and delimiter defaults.  
    Description: Define default frontmatter syntax and delimiter handling.
-   [ ] 1.3.1.2 Subtask - Add rendering and debounce defaults.  
+   [x] 1.3.1.2 Subtask - Add rendering and debounce defaults.  
    Description: Define queue sizes, timeouts, and preview update behavior.
-   [ ] 1.3.1.3 Subtask - Add persistence defaults.  
+   [x] 1.3.1.3 Subtask - Add persistence defaults.  
    Description: Define autosave interval, temporary file path policy, and backup mode.
 
-  [ ] 1.3.2 Task - Implement configuration normalization and precedence  
+  [x] 1.3.2 Task - Implement configuration normalization and precedence  
   Description: Ensure deterministic runtime behavior across env/app/call options.
-   [ ] 1.3.2.1 Subtask - Merge option precedence layers.  
+   [x] 1.3.2.1 Subtask - Merge option precedence layers.  
    Description: Apply call options > session options > app env defaults.
-   [ ] 1.3.2.2 Subtask - Normalize filesystem and workspace paths.  
+   [x] 1.3.2.2 Subtask - Normalize filesystem and workspace paths.  
    Description: Resolve relative paths and reject invalid workspace boundaries.
-   [ ] 1.3.2.3 Subtask - Emit structured config validation errors.  
+   [x] 1.3.2.3 Subtask - Emit structured config validation errors.  
    Description: Include field paths and actionable diagnostics.
 
  [ ] 1.4 Section - Phase 1 Integration Tests  
