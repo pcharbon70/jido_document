@@ -44,19 +44,19 @@ Description: Finalize production readiness through stable APIs, complete docs, a
   Description: Cover architecture, setup, usage, and operations.
    [ ] 8.2.1.1 Subtask - Write quickstart for creating and running sessions.  
    Description: Include minimal setup from a fresh Mix project.
-   [ ] 8.2.1.2 Subtask - Write adapter integration guides.  
-   Description: Document LiveView, TUI, and Desktop wiring patterns.
+   [ ] 8.2.1.2 Subtask - Write integration boundary guides.  
+   Description: Document core API usage, session orchestration, and signal consumption patterns.
    [ ] 8.2.1.3 Subtask - Write troubleshooting and diagnostics playbook.  
    Description: Include common failure signatures and resolutions.
 
   [ ] 8.2.2 Task - Ship runnable example applications and templates  
   Description: Provide practical references for common integration patterns.
-   [ ] 8.2.2.1 Subtask - Create minimal CLI/TUI sample.  
+   [ ] 8.2.2.1 Subtask - Create minimal API-driven sample.  
    Description: Demonstrate core load/edit/render/save lifecycle.
-   [ ] 8.2.2.2 Subtask - Create LiveView sample with schema-driven frontmatter form.  
-   Description: Demonstrate dynamic metadata editing and live preview.
-   [ ] 8.2.2.3 Subtask - Create Desktop IPC sample integration.  
-   Description: Demonstrate transport contract and reconnect handling.
+   [ ] 8.2.2.2 Subtask - Create session concurrency sample.  
+   Description: Demonstrate lock ownership, conflict responses, and takeover flow.
+   [ ] 8.2.2.3 Subtask - Create crash/recovery sample integration.  
+   Description: Demonstrate reconnect-safe session restoration behavior.
 
  [ ] 8.3 Section - CI/CD and Release Automation  
  Description: Automate quality enforcement and repeatable release execution.

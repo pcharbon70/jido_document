@@ -59,10 +59,10 @@ Description: Build the canonical document representation with deterministic pars
    Description: Ensure no silent loss of supported metadata fields.
 
  [x] 2.3 Section - Schema and Field Definition System  
- Description: Provide schema-driven metadata definitions for validation and UI generation.
+ Description: Provide schema-driven metadata definitions for validation and downstream tooling.
 
   [x] 2.3.1 Task - Implement `Jido.Document.Schema` behavior and `Jido.Document.Field` struct  
-  Description: Define declarative field contracts that adapters can consume.
+  Description: Define declarative field contracts that validation and integration consumers can consume.
    [x] 2.3.1.1 Subtask - Add field attributes (`name`, `type`, `label`, `required`, `default`, `options`).  
    Description: Capture enough information for both runtime validation and form rendering.
    [x] 2.3.1.2 Subtask - Add primitive and composite type support.  
@@ -75,7 +75,7 @@ Description: Build the canonical document representation with deterministic pars
    [x] 2.3.2.1 Subtask - Add type coercion where safe and explicit.  
    Description: Convert compatible scalar values while flagging ambiguous cases.
    [x] 2.3.2.2 Subtask - Aggregate field-level errors with paths.  
-   Description: Return structured diagnostics for UI and API consumers.
+   Description: Return structured diagnostics for API and integration consumers.
    [x] 2.3.2.3 Subtask - Emit unknown/extra key diagnostics policy.  
    Description: Configure warn, ignore, or reject behavior.
 
