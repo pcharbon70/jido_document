@@ -26,6 +26,8 @@ defmodule JidoDocs.Agent do
           session_id: String.t(),
           document: Document.t() | nil,
           preview: map() | nil,
+          last_good_preview: map() | nil,
+          render_fallback_active: boolean(),
           history: [history_entry()],
           subscribers: MapSet.t(pid()),
           locks: MapSet.t(atom()),
@@ -35,6 +37,8 @@ defmodule JidoDocs.Agent do
   defstruct session_id: nil,
             document: nil,
             preview: nil,
+            last_good_preview: nil,
+            render_fallback_active: false,
             history: [],
             subscribers: MapSet.new(),
             locks: MapSet.new(),
@@ -168,21 +172,45 @@ defmodule JidoDocs.Agent do
           {ok_result, next_state}
 
         %Result{status: :error, error: error} = error_result ->
-          rollback? = Map.get(opts, :optimistic, true)
+          if action == :render do
+            fallback_value = %{
+              preview: choose_fallback_preview(state, error),
+              revision: current_revision(state),
+              document: state.document
+            }
 
-          recovered_state =
-            if rollback? and action in [:update_frontmatter, :update_body] do
-              previous_state
-            else
+            recovered_state =
               state
-            end
+              |> unlock_if_needed(action)
+              |> apply_failure(action, error, error_result.metadata, true)
 
-          next_state =
-            recovered_state
-            |> unlock_if_needed(action)
-            |> apply_failure(action, error, error_result.metadata, rollback?)
+            next_state =
+              apply_success(
+                recovered_state,
+                :render,
+                fallback_value,
+                Map.put(error_result.metadata, :fallback, true)
+              )
 
-          {error_result, next_state}
+            {Result.ok(fallback_value, Map.put(error_result.metadata, :fallback, true)),
+             next_state}
+          else
+            rollback? = Map.get(opts, :optimistic, true)
+
+            recovered_state =
+              if rollback? and action in [:update_frontmatter, :update_body] do
+                previous_state
+              else
+                state
+              end
+
+            next_state =
+              recovered_state
+              |> unlock_if_needed(action)
+              |> apply_failure(action, error, error_result.metadata, rollback?)
+
+            {error_result, next_state}
+          end
       end
     else
       {:error, %Error{} = error} ->
@@ -211,10 +239,18 @@ defmodule JidoDocs.Agent do
   end
 
   defp apply_success(state, action, value, metadata) do
+    previous_fallback = state.render_fallback_active
+
     state =
       case action do
         :load ->
-          %{state | document: Map.get(value, :document), preview: nil}
+          %{
+            state
+            | document: Map.get(value, :document),
+              preview: nil,
+              last_good_preview: nil,
+              render_fallback_active: false
+          }
 
         :save ->
           %{state | document: Map.get(value, :document, state.document)}
@@ -226,7 +262,7 @@ defmodule JidoDocs.Agent do
           %{state | document: Map.get(value, :document, state.document)}
 
         :render ->
-          %{state | preview: Map.get(value, :preview)}
+          apply_render_state(state, Map.get(value, :preview))
       end
 
     signal_type = signal_type_for_success(action)
@@ -242,6 +278,15 @@ defmodule JidoDocs.Agent do
           metadata: metadata
         }
       )
+
+    if action == :render and previous_fallback and not state.render_fallback_active do
+      _ =
+        emit_signal(state, :updated, %{
+          action: :render_recovered,
+          revision: current_revision(state),
+          metadata: metadata
+        })
+    end
 
     entry = %{
       action: action,
@@ -319,6 +364,46 @@ defmodule JidoDocs.Agent do
 
   defp current_revision(%__MODULE__{document: %Document{revision: revision}}), do: revision
   defp current_revision(_), do: nil
+
+  defp choose_fallback_preview(state, error) do
+    fallback_diag = %{
+      severity: :error,
+      message: "render fallback active: #{error.message}",
+      location: nil,
+      hint: "Fix render diagnostics and retry render",
+      code: :render_failure
+    }
+
+    case state.last_good_preview do
+      %{} = preview ->
+        diagnostics = (preview[:diagnostics] || []) ++ [fallback_diag]
+
+        preview
+        |> Map.put(:diagnostics, diagnostics)
+        |> Map.put(:adapter, :fallback)
+        |> Map.update(
+          :metadata,
+          %{fallback: true, source: :last_good},
+          &Map.merge(&1, %{fallback: true, source: :last_good})
+        )
+
+      _ ->
+        JidoDocs.Renderer.fallback_preview((state.document && state.document.body) || "", error)
+    end
+  end
+
+  defp apply_render_state(state, nil), do: state
+
+  defp apply_render_state(state, preview) when is_map(preview) do
+    fallback? =
+      Map.get(preview, :adapter) == :fallback or get_in(preview, [:metadata, :fallback]) == true
+
+    if fallback? do
+      %{state | preview: preview, render_fallback_active: true}
+    else
+      %{state | preview: preview, last_good_preview: preview, render_fallback_active: false}
+    end
+  end
 
   defp maybe_put(map, _key, nil), do: map
   defp maybe_put(map, key, value), do: Map.put(map, key, value)
