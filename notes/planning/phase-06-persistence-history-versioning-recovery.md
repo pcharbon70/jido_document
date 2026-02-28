@@ -13,7 +13,7 @@ Back to index: [README](./README.md)
 - Undo/redo must work across frontmatter and body mutations.
 - External file mutation detection is required before overwrite.
 
-[ ] 6 Phase 6 - Persistence, History, Versioning, and Recovery  
+[x] 6 Phase 6 - Persistence, History, Versioning, and Recovery  
 Description: Deliver durable persistence semantics, coherent edit history, and robust crash recovery.
 
  [x] 6.1 Section - Save Semantics and Filesystem Safety  
@@ -100,23 +100,23 @@ Description: Deliver durable persistence semantics, coherent edit history, and r
    [x] 6.4.2.3 Subtask - Add irreversible-change safety guards.  
    Description: Require explicit confirmation for destructive migrations.
 
- [ ] 6.5 Section - Phase 6 Integration Tests  
+ [x] 6.5 Section - Phase 6 Integration Tests  
  Description: Validate persistence safety, history coherence, and recovery workflows.
 
-  [ ] 6.5.1 Task - Persistence and divergence integration tests  
+  [x] 6.5.1 Task - Persistence and divergence integration tests  
   Description: Ensure save pipeline and conflict detection behave safely.
-   [ ] 6.5.1.1 Subtask - Simulate write interruption during save.  
+   [x] 6.5.1.1 Subtask - Simulate write interruption during save.  
    Description: Confirm target file remains uncorrupted.
-   [ ] 6.5.1.2 Subtask - Simulate external file modification before save.  
+   [x] 6.5.1.2 Subtask - Simulate external file modification before save.  
    Description: Assert overwrite prevention and conflict diagnostics.
-   [ ] 6.5.1.3 Subtask - Validate permission and metadata preservation.  
+   [x] 6.5.1.3 Subtask - Validate permission and metadata preservation.  
    Description: Confirm save keeps expected file properties.
 
-  [ ] 6.5.2 Task - History and recovery integration tests  
+  [x] 6.5.2 Task - History and recovery integration tests  
   Description: Confirm undo/redo and checkpoint recovery across realistic edit sessions.
-   [ ] 6.5.2.1 Subtask - Test mixed frontmatter/body undo/redo chains.  
+   [x] 6.5.2.1 Subtask - Test mixed frontmatter/body undo/redo chains.  
    Description: Verify state and revision correctness after multiple reversals.
-   [ ] 6.5.2.2 Subtask - Test crash and checkpoint recovery flow.  
+   [x] 6.5.2.2 Subtask - Test crash and checkpoint recovery flow.  
    Description: Ensure unsaved edits can be restored deterministically.
-   [ ] 6.5.2.3 Subtask - Test recovery when disk state diverged.  
+   [x] 6.5.2.3 Subtask - Test recovery when disk state diverged.  
    Description: Verify explicit reconciliation path and no silent loss.
