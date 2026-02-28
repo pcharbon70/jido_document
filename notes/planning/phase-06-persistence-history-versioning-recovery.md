@@ -3,9 +3,9 @@
 Back to index: [README](./README.md)
 
 ## Relevant Shared APIs / Interfaces
-- `JidoDocs.Actions.Save`
-- `JidoDocs.Agent` history state
-- `JidoDocs.Document` revision metadata
+- `Jido.Document.Actions.Save`
+- `Jido.Document.Agent` history state
+- `Jido.Document.Document` revision metadata
 - Autosave/checkpoint configuration
 
 ## Relevant Assumptions / Defaults

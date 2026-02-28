@@ -1,6 +1,6 @@
-# JidoDocs Planning Index
+# Jido.Document Planning Index
 
-This directory contains the phase-by-phase implementation plan for `JidoDocs`, an agent-oriented document editing system built on top of Jido.
+This directory contains the phase-by-phase implementation plan for `Jido.Document`, an agent-oriented document editing system built on top of Jido.
 
 ## Phase Files
 1. [Phase 1 - Foundation and Core Integration](./phase-01-foundation-and-core-integration.md): Establish project skeleton, runtime contracts, and dependency boundaries.
@@ -26,19 +26,19 @@ This directory contains the phase-by-phase implementation plan for `JidoDocs`, a
   - Each phase ends with a final Integration Tests section.
 
 ## Shared API / Interface Contract
-- `JidoDocs.Document`:
+- `Jido.Document.Document`:
   - `parse/2`, `serialize/1`, `validate/2`, `mark_dirty/1`
-- `JidoDocs.Schema` and `JidoDocs.Field`:
+- `Jido.Document.Schema` and `Jido.Document.Field`:
   - Schema-driven field contracts for frontmatter rendering and validation.
-- `JidoDocs.Actions.*`:
+- `Jido.Document.Actions.*`:
   - `Load`, `Save`, `UpdateFrontmatter`, `UpdateBody`, `Render`.
-- `JidoDocs.Agent`:
+- `Jido.Document.Agent`:
   - Stateful session process coordinating actions, history, and signals.
-- `JidoDocs.Renderer`:
+- `Jido.Document.Renderer`:
   - Markdown-to-HTML/AST pipeline with diagnostics.
-- `JidoDocs.Signal` event taxonomy:
-  - `jido_docs/document/loaded`, `updated`, `saved`, `rendered`, `failed`.
-- `JidoDocs.SessionRegistry`:
+- `Jido.Document.Signal` event taxonomy:
+  - `jido_document/document/loaded`, `updated`, `saved`, `rendered`, `failed`.
+- `Jido.Document.SessionRegistry`:
   - Session lookup, ownership, and transport coordination.
 
 ## Shared Assumptions and Defaults

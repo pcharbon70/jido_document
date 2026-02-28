@@ -1,9 +1,9 @@
-defmodule Project.MixProject do
+defmodule JidoDocument.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :project,
+      app: :jido_document,
       version: "0.1.0",
       elixir: "~> 1.18",
       start_permanent: Mix.env() == :prod,
@@ -15,7 +15,7 @@ defmodule Project.MixProject do
   def application do
     [
       extra_applications: [:logger],
-      mod: {JidoDocs.Application, []}
+      mod: {Jido.Document.Application, []}
     ]
   end
 

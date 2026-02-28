@@ -3,8 +3,8 @@
 Back to index: [README](./README.md)
 
 ## Relevant Shared APIs / Interfaces
-- `JidoDocs.SessionRegistry`
-- `JidoDocs.Agent`
+- `Jido.Document.SessionRegistry`
+- `Jido.Document.Agent`
 - Signal subscription APIs
 - LiveView/TUI/Desktop transport adapters
 
@@ -50,7 +50,7 @@ Description: Connect LiveView, TUI, and Desktop clients to shared session agents
    Description: Keep UI state synchronized with agent state.
 
   [x] 5.2.2 Task - Implement schema-driven frontmatter form generation  
-  Description: Build dynamic forms from `JidoDocs.Schema` definitions.
+  Description: Build dynamic forms from `Jido.Document.Schema` definitions.
    [x] 5.2.2.1 Subtask - Map field types to LiveView form components.  
    Description: Support booleans, arrays, enums, and text values.
    [x] 5.2.2.2 Subtask - Render inline validation errors and hints.  

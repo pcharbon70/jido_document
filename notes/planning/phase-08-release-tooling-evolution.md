@@ -3,7 +3,7 @@
 Back to index: [README](./README.md)
 
 ## Relevant Shared APIs / Interfaces
-- Public `JidoDocs` API modules
+- Public `Jido.Document` API modules
 - CI/CD and packaging workflows
 - Documentation and example projects
 - Extension/plugin lifecycle policy

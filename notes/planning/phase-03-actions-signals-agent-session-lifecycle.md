@@ -3,12 +3,12 @@
 Back to index: [README](./README.md)
 
 ## Relevant Shared APIs / Interfaces
-- `JidoDocs.Actions.Load`
-- `JidoDocs.Actions.Save`
-- `JidoDocs.Actions.UpdateFrontmatter`
-- `JidoDocs.Actions.UpdateBody`
-- `JidoDocs.Actions.Render`
-- `JidoDocs.Agent`
+- `Jido.Document.Actions.Load`
+- `Jido.Document.Actions.Save`
+- `Jido.Document.Actions.UpdateFrontmatter`
+- `Jido.Document.Actions.UpdateBody`
+- `Jido.Document.Actions.Render`
+- `Jido.Document.Agent`
 - Jido signal contracts
 
 ## Relevant Assumptions / Defaults
@@ -85,7 +85,7 @@ Description: Build atomic operation verbs, stable event contracts, and reliable 
  [x] 3.4 Section - Agent State and Session Lifecycle  
  Description: Build a resilient stateful session process that orchestrates actions and events.
 
-  [x] 3.4.1 Task - Implement `JidoDocs.Agent` state model and initialization  
+  [x] 3.4.1 Task - Implement `Jido.Document.Agent` state model and initialization  
   Description: Represent active document session state with history and preview metadata.
    [x] 3.4.1.1 Subtask - Define state fields (`document`, `preview`, `history`, `subscribers`, `locks`).  
    Description: Support editing, rendering, and multi-adapter coordination.

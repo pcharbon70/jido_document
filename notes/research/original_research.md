@@ -1,6 +1,6 @@
 This is a great architectural challenge. By leveraging the **Jido** ecosystem, we can create a robust, agent-oriented architecture where the document itself is a managed entity. This fits perfectly with the requirement for multiple interfaces (LiveView, TUI, Desktop) controlling the same underlying logic.
 
-Here is the proposed architecture for the library, which we will call **`JidoDocs`**.
+Here is the proposed architecture for the library, which we will call **`Jido.Document`**.
 
 ---
 
@@ -10,9 +10,9 @@ The core philosophy is **"Agent as the Document Session."**
 Instead of a passive data structure, an editing session is an active Agent (using `Jido`). This agent holds the state, validates changes, and coordinates persistence.
 
 The architecture consists of three layers:
-1.  **Core Layer (`JidoDocs`)**: Pure data structures, parsing, and serialization logic. UI-agnostic.
+1.  **Core Layer (`Jido.Document`)**: Pure data structures, parsing, and serialization logic. UI-agnostic.
 2.  **Action Layer (`JidoActions`)**: Atomic, reusable operations (Load, Save, Update) that interact with the file system or external APIs.
-3.  **Agent Layer (`JidoDocs.Agent`)**: The stateful process that orchestrates actions, manages undo/redo history, and broadcasts updates to UIs via Signals.
+3.  **Agent Layer (`Jido.Document.Agent`)**: The stateful process that orchestrates actions, manages undo/redo history, and broadcasts updates to UIs via Signals.
 
 ### 2. Core Layer: Data & Parsing
 
@@ -22,7 +22,7 @@ We need a structured representation of a file that contains FrontMatter and Mark
 We define a struct that separates the metadata (FrontMatter) from the content (Body).
 
 ```elixir
-defmodule JidoDocs.Document do
+defmodule Jido.Document.Document do
   @moduledoc """
   Represents a document with FrontMatter and Markdown body.
   """
@@ -70,18 +70,18 @@ end
 To support the "Form Section" in the UI, we need a schema definition. This allows the UI to dynamically generate fields (text input, dropdowns, checkboxes).
 
 ```elixir
-defmodule JidoDocs.Schema do
-  @callback fields() :: [JidoDocs.Field.t()]
+defmodule Jido.Document.Schema do
+  @callback fields() :: [Jido.Document.Field.t()]
   
   # Example implementation by the user
   defmodule MyBlogSchema do
-    @behaviour JidoDocs.Schema
+    @behaviour Jido.Document.Schema
     
     def fields do
       [
-        %JidoDocs.Field{name: :title, type: :string, label: "Post Title"},
-        %JidoDocs.Field{name: :tags, type: {:array, :string}},
-        %JidoDocs.Field{name: :published, type: :boolean, default: false}
+        %Jido.Document.Field{name: :title, type: :string, label: "Post Title"},
+        %Jido.Document.Field{name: :tags, type: {:array, :string}},
+        %Jido.Document.Field{name: :published, type: :boolean, default: false}
       ]
     end
   end
@@ -95,17 +95,17 @@ We utilize `JidoAction` for the verbs and `JidoSignal` for eventing.
 #### Actions (Verbs)
 These are the atomic operations that the Agent will execute.
 
-1.  **`JidoDocs.Actions.Load`**:
+1.  **`Jido.Document.Actions.Load`**:
     *   Input: `path`, `schema`.
     *   Logic: Reads file from disk, calls `Document.parse/2`.
     *   Output: `%Document{}`.
 
-2.  **`JidoDocs.Actions.Save`**:
+2.  **`Jido.Document.Actions.Save`**:
     *   Input: `document`.
     *   Logic: Calls `Document.serialize/1`, writes to disk.
     *   Output: `{:ok, path}`.
 
-3.  **`JidoDocs.Actions.Render`**:
+3.  **`Jido.Document.Actions.Render`**:
     *   Input: `document`.
     *   Logic: Uses `Mdex` to render the body to HTML/AST.
     *   Output: `%{html: ..., toc: ...}`.
@@ -113,22 +113,22 @@ These are the atomic operations that the Agent will execute.
 #### Signals (Events)
 When the document changes, the Agent emits signals that UIs subscribe to.
 
-*   `jido_docs/document/loaded`
-*   `jido_docs/document/updated` (payload contains changes)
-*   `jido_docs/document/saved`
+*   `jido_document/document/loaded`
+*   `jido_document/document/updated` (payload contains changes)
+*   `jido_document/document/saved`
 
 ### 4. The Agent: Stateful Session
 
 This is where the magic happens. We create a `Jido.Agent` to represent the editor session.
 
 ```elixir
-defmodule JidoDocs.Agent do
+defmodule Jido.Document.Agent do
   use Jido.Agent,
-    name: "jido_docs_session",
+    name: "jido_document_session",
     actions: [
-      JidoDocs.Actions.Load,
-      JidoDocs.Actions.Save,
-      JidoDocs.Actions.Render
+      Jido.Document.Actions.Load,
+      Jido.Document.Actions.Save,
+      Jido.Document.Actions.Render
     ]
 
   # The Agent State
@@ -140,7 +140,7 @@ defmodule JidoDocs.Agent do
   end
 
   @impl true
-  def handle_signal(%JidoSignal{type: "jido_docs/document/loaded", data: doc}, state) do
+  def handle_signal(%JidoSignal{type: "jido_document/document/loaded", data: doc}, state) do
     # When loaded, we might automatically render a preview
     {:noreply, %{state | document: doc}}
   end
@@ -151,7 +151,7 @@ defmodule JidoDocs.Agent do
     new_doc = %{state.document | frontmatter: params.data, dirty: true}
     
     # Emit signal that UIs should listen to
-    signal = JidoSignal.new!(type: "jido_docs/document/updated", data: new_doc)
+    signal = JidoSignal.new!(type: "jido_document/document/updated", data: new_doc)
     
     {:ok, signal, %{state | document: new_doc}}
   end
@@ -163,7 +163,7 @@ defmodule JidoDocs.Agent do
     # Optimization: We could use Mdex here to render just the diff or new HTML
     # if we want real-time preview in the agent state.
     
-    signal = JidoSignal.new!(type: "jido_docs/document/updated", data: new_doc)
+    signal = JidoSignal.new!(type: "jido_document/document/updated", data: new_doc)
     {:ok, signal, %{state | document: new_doc}}
   end
 end
@@ -181,7 +181,7 @@ We should use **Mdex Plugins** to handle the specific needs of a coding assistan
 **Rendering Pipeline:**
 
 ```elixir
-defmodule JidoDocs.Renderer do
+defmodule Jido.Document.Renderer do
   alias Mdex.{Document, Pipe}
 
   def to_html(body) do
@@ -201,8 +201,8 @@ end
 
 The LiveView interface doesn't hold the logic; it just holds the form state and communicates with the Agent.
 
-1.  **Mount**: The LiveView starts or connects to a `JidoDocs.Agent` process (identified by a session ID or file path).
-2.  **Subscribe**: The LiveView subscribes to the Agent's signals (`jido_docs/document/updated`).
+1.  **Mount**: The LiveView starts or connects to a `Jido.Document.Agent` process (identified by a session ID or file path).
+2.  **Subscribe**: The LiveView subscribes to the Agent's signals (`jido_document/document/updated`).
 3.  **Form Interaction**:
     *   User types in the "Title" field (FrontMatter).
     *   LiveView sends a `cmd/3` to the Agent: `update_frontmatter(%{title: "New Title"})`.

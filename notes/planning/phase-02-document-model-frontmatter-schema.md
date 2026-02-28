@@ -3,9 +3,9 @@
 Back to index: [README](./README.md)
 
 ## Relevant Shared APIs / Interfaces
-- `JidoDocs.Document`
-- `JidoDocs.Schema`
-- `JidoDocs.Field`
+- `Jido.Document.Document`
+- `Jido.Document.Schema`
+- `Jido.Document.Field`
 - Frontmatter parser adapter behavior
 
 ## Relevant Assumptions / Defaults
@@ -19,7 +19,7 @@ Description: Build the canonical document representation with deterministic pars
  [x] 2.1 Section - Document Struct and Invariants  
  Description: Define the core data model and enforce internal consistency rules.
 
-  [x] 2.1.1 Task - Implement `JidoDocs.Document` struct contract  
+  [x] 2.1.1 Task - Implement `Jido.Document.Document` struct contract  
   Description: Introduce the canonical runtime shape for document state.
    [x] 2.1.1.1 Subtask - Define fields (`path`, `frontmatter`, `body`, `raw`, `schema`, `dirty`, `revision`).  
    Description: Support editing, rendering, and persistence needs.
@@ -61,7 +61,7 @@ Description: Build the canonical document representation with deterministic pars
  [x] 2.3 Section - Schema and Field Definition System  
  Description: Provide schema-driven metadata definitions for validation and UI generation.
 
-  [x] 2.3.1 Task - Implement `JidoDocs.Schema` behavior and `JidoDocs.Field` struct  
+  [x] 2.3.1 Task - Implement `Jido.Document.Schema` behavior and `Jido.Document.Field` struct  
   Description: Define declarative field contracts that adapters can consume.
    [x] 2.3.1.1 Subtask - Add field attributes (`name`, `type`, `label`, `required`, `default`, `options`).  
    Description: Capture enough information for both runtime validation and form rendering.
