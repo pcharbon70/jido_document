@@ -79,25 +79,25 @@ Description: Harden the system with policy controls, auditable behavior, and res
    [x] 7.3.2.3 Subtask - Preserve secure raw access path for authorized operations.  
    Description: Avoid irreversible data loss from masking flow.
 
- [ ] 7.4 Section - Observability and Reliability Controls  
+ [x] 7.4 Section - Observability and Reliability Controls  
  Description: Instrument health and protect system behavior under partial failures.
 
-  [ ] 7.4.1 Task - Implement metrics and telemetry instrumentation  
+  [x] 7.4.1 Task - Implement metrics and telemetry instrumentation  
   Description: Measure latency, failure rates, and queue health across components.
-   [ ] 7.4.1.1 Subtask - Add action latency/error metrics.  
+   [x] 7.4.1.1 Subtask - Add action latency/error metrics.  
    Description: Monitor load/update/save/render performance and failures.
-   [ ] 7.4.1.2 Subtask - Add render queue and session-level metrics.  
+   [x] 7.4.1.2 Subtask - Add render queue and session-level metrics.  
    Description: Track saturation and responsiveness.
-   [ ] 7.4.1.3 Subtask - Add adapter connectivity health signals.  
+   [x] 7.4.1.3 Subtask - Add adapter connectivity health signals.  
    Description: Observe disconnect/reconnect stability.
 
-  [ ] 7.4.2 Task - Implement reliability and degradation strategies  
+  [x] 7.4.2 Task - Implement reliability and degradation strategies  
   Description: Keep core workflows operational when dependencies fail.
-   [ ] 7.4.2.1 Subtask - Add retry policy with jitter for transient failures.  
+   [x] 7.4.2.1 Subtask - Add retry policy with jitter for transient failures.  
    Description: Improve resilience without causing retry storms.
-   [ ] 7.4.2.2 Subtask - Add circuit breaker for repeated renderer/parser failures.  
+   [x] 7.4.2.2 Subtask - Add circuit breaker for repeated renderer/parser failures.  
    Description: Protect system throughput during upstream instability.
-   [ ] 7.4.2.3 Subtask - Define degraded mode behavior contract.  
+   [x] 7.4.2.3 Subtask - Define degraded mode behavior contract.  
    Description: Prioritize edit/save reliability over non-critical features.
 
  [ ] 7.5 Section - Phase 7 Integration Tests  

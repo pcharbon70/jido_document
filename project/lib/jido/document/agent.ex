@@ -19,6 +19,7 @@ defmodule Jido.Document.Agent do
     Error,
     History,
     Persistence,
+    Reliability,
     Revision,
     SignalBus
   }
@@ -50,6 +51,11 @@ defmodule Jido.Document.Agent do
           audit_events: [Audit.event()],
           audit_limit: pos_integer(),
           audit_sinks: [module() | (Audit.event() -> term())],
+          render_failure_streak: non_neg_integer(),
+          render_circuit_open_until_ms: integer() | nil,
+          render_circuit_threshold: pos_integer(),
+          render_circuit_cooldown_ms: pos_integer(),
+          degraded_mode: boolean(),
           preview: map() | nil,
           last_good_preview: map() | nil,
           render_fallback_active: boolean(),
@@ -72,6 +78,11 @@ defmodule Jido.Document.Agent do
             audit_events: [],
             audit_limit: 500,
             audit_sinks: [],
+            render_failure_streak: 0,
+            render_circuit_open_until_ms: nil,
+            render_circuit_threshold: 3,
+            render_circuit_cooldown_ms: 5_000,
+            degraded_mode: false,
             preview: nil,
             last_good_preview: nil,
             render_fallback_active: false,
@@ -148,6 +159,8 @@ defmodule Jido.Document.Agent do
     checkpoint_on_edit = Keyword.get(opts, :checkpoint_on_edit, true)
     audit_limit = max(Keyword.get(opts, :audit_limit, 500), 1)
     audit_sinks = Keyword.get(opts, :audit_sinks, [])
+    render_circuit_threshold = max(Keyword.get(opts, :render_circuit_threshold, 3), 1)
+    render_circuit_cooldown_ms = max(Keyword.get(opts, :render_circuit_cooldown_ms, 5_000), 1)
 
     state = %__MODULE__{
       session_id: session_id,
@@ -157,7 +170,9 @@ defmodule Jido.Document.Agent do
       autosave_interval_ms: autosave_interval_ms,
       checkpoint_on_edit: checkpoint_on_edit,
       audit_limit: audit_limit,
-      audit_sinks: audit_sinks
+      audit_sinks: audit_sinks,
+      render_circuit_threshold: render_circuit_threshold,
+      render_circuit_cooldown_ms: render_circuit_cooldown_ms
     }
 
     state = load_pending_checkpoint(state)
@@ -192,14 +207,21 @@ defmodule Jido.Document.Agent do
   @impl true
   def handle_call({:subscribe, subscriber}, _from, state) do
     case SignalBus.subscribe(state.signal_bus, state.session_id, pid: subscriber) do
-      :ok -> {:reply, :ok, %{state | subscribers: MapSet.put(state.subscribers, subscriber)}}
-      {:error, %Error{} = error} -> {:reply, {:error, error}, state}
+      :ok ->
+        next_state = %{state | subscribers: MapSet.put(state.subscribers, subscriber)}
+        emit_connectivity_signal(next_state, :subscribed)
+        {:reply, :ok, next_state}
+
+      {:error, %Error{} = error} ->
+        {:reply, {:error, error}, state}
     end
   end
 
   def handle_call({:unsubscribe, subscriber}, _from, state) do
     :ok = SignalBus.unsubscribe(state.signal_bus, state.session_id, pid: subscriber)
-    {:reply, :ok, %{state | subscribers: MapSet.delete(state.subscribers, subscriber)}}
+    next_state = %{state | subscribers: MapSet.delete(state.subscribers, subscriber)}
+    emit_connectivity_signal(next_state, :unsubscribed)
+    {:reply, :ok, next_state}
   end
 
   def handle_call(:state, _from, state), do: {:reply, state, state}
@@ -254,6 +276,7 @@ defmodule Jido.Document.Agent do
   end
 
   defp execute_command(state, action, params, opts) do
+    started = System.monotonic_time(:microsecond)
     params = normalize_map(params)
     opts = normalize_map(opts)
     params = inject_command_defaults(state, action, params)
@@ -269,10 +292,12 @@ defmodule Jido.Document.Agent do
           execute_action_command(state, previous_state, action, params, opts)
         end
 
+      emit_agent_metrics(next_state, action, result, started)
       {result, unlock_if_needed(next_state, action)}
     else
       {:error, %Error{} = error} ->
         result = Result.error(error, %{action: action, session_id: state.session_id})
+        emit_agent_metrics(state, action, result, started)
         {result, state}
     end
   end
@@ -291,7 +316,12 @@ defmodule Jido.Document.Agent do
       metadata: %{action: action}
     }
 
-    result = Action.execute(action_module(action), params, context)
+    result =
+      execute_with_retry(
+        fn -> Action.execute(action_module(action), params, context) end,
+        action,
+        opts
+      )
 
     case result do
       %Result{status: :ok, value: value} = ok_result ->
@@ -420,6 +450,14 @@ defmodule Jido.Document.Agent do
       action == :save and locked?(state, :render) ->
         {:error, Error.new(:busy, "render in progress; save deferred", %{action: action})}
 
+      action == :render and render_circuit_open?(state) ->
+        {:error,
+         Error.new(:busy, "render circuit open; degraded mode active", %{
+           action: action,
+           degraded_mode: true,
+           retry_after_ms: render_retry_after_ms(state)
+         })}
+
       action == :render and locked?(state, :render) ->
         {:error, Error.new(:busy, "render already in progress", %{action: action})}
 
@@ -480,6 +518,7 @@ defmodule Jido.Document.Agent do
       end
 
     state = apply_checkpoint_policy(state, action, metadata)
+    state = apply_render_success_reliability(state, action, metadata)
     {state, revision_entry} = bump_revision_sequence(state, action, metadata)
     signal_metadata = Map.put(metadata, :revision_entry, revision_entry)
 
@@ -528,6 +567,8 @@ defmodule Jido.Document.Agent do
   end
 
   defp apply_failure(state, action, %Error{} = error, metadata, rollback?) do
+    state = apply_render_failure_reliability(state, action, error, metadata)
+
     _ =
       emit_signal(state, :failed, %{
         action: action,
@@ -1123,6 +1164,172 @@ defmodule Jido.Document.Agent do
     }
   end
 
+  defp execute_with_retry(fun, action, opts) do
+    retry_opts = retry_opts_for_action(action, opts)
+
+    if retry_opts == nil do
+      fun.()
+    else
+      Reliability.with_retry(fun, retry_opts)
+    end
+  end
+
+  defp retry_opts_for_action(action, opts) do
+    if action in [:load, :save, :render] do
+      candidate = Map.get(opts, :retry) || get_in(opts, [:context_options, :retry])
+
+      cond do
+        candidate == false ->
+          nil
+
+        is_map(candidate) ->
+          candidate
+
+        is_list(candidate) ->
+          Map.new(candidate)
+
+        true ->
+          %{max_attempts: 3, base_delay_ms: 25, max_delay_ms: 300, jitter_pct: 0.2}
+      end
+    else
+      nil
+    end
+  end
+
+  defp apply_render_success_reliability(state, :render, metadata) do
+    if Map.get(metadata, :fallback, false) do
+      state
+    else
+      state =
+        %{
+          state
+          | render_failure_streak: 0,
+            render_circuit_open_until_ms: nil
+        }
+
+      if state.degraded_mode do
+        _ =
+          emit_signal(state, :updated, %{
+            action: :degraded_mode_recovered,
+            revision: current_revision(state),
+            payload: %{component: :render, state: :closed},
+            metadata: metadata
+          })
+
+        %{state | degraded_mode: false}
+      else
+        state
+      end
+    end
+  end
+
+  defp apply_render_success_reliability(state, _action, _metadata), do: state
+
+  defp apply_render_failure_reliability(state, :render, _error, metadata) do
+    streak = state.render_failure_streak + 1
+    now_ms = now_ms()
+
+    if streak >= state.render_circuit_threshold do
+      open_until = now_ms + state.render_circuit_cooldown_ms
+
+      state = %{
+        state
+        | render_failure_streak: streak,
+          render_circuit_open_until_ms: open_until,
+          degraded_mode: true
+      }
+
+      _ =
+        emit_signal(state, :updated, %{
+          action: :degraded_mode,
+          revision: current_revision(state),
+          payload: %{
+            component: :render,
+            state: :open,
+            failure_streak: streak,
+            retry_after_ms: state.render_circuit_cooldown_ms
+          },
+          metadata: metadata
+        })
+
+      state
+    else
+      %{state | render_failure_streak: streak}
+    end
+  end
+
+  defp apply_render_failure_reliability(state, _action, _error, _metadata), do: state
+
+  defp render_circuit_open?(state) do
+    case state.render_circuit_open_until_ms do
+      nil -> false
+      open_until -> now_ms() < open_until
+    end
+  end
+
+  defp render_retry_after_ms(state) do
+    case state.render_circuit_open_until_ms do
+      nil -> 0
+      open_until -> max(open_until - now_ms(), 0)
+    end
+  end
+
+  defp emit_connectivity_signal(state, transition) do
+    _ =
+      emit_signal(state, :updated, %{
+        action: :connectivity,
+        revision: current_revision(state),
+        payload: %{transition: transition, subscribers: MapSet.size(state.subscribers)},
+        metadata: %{source: :agent}
+      })
+
+    :ok
+  end
+
+  defp emit_agent_metrics(state, action, result, started_us) do
+    duration_us = System.monotonic_time(:microsecond) - started_us
+
+    status =
+      case result do
+        %Result{status: :ok} -> :ok
+        _ -> :error
+      end
+
+    metadata = %{
+      action: action,
+      session_id: state.session_id,
+      status: status,
+      degraded_mode: state.degraded_mode,
+      subscribers: MapSet.size(state.subscribers),
+      queue_stats: render_queue_stats()
+    }
+
+    if Code.ensure_loaded?(:telemetry) and function_exported?(:telemetry, :execute, 3) do
+      apply(:telemetry, :execute, [
+        [:jido_document, :agent, :command],
+        %{duration_us: duration_us},
+        metadata
+      ])
+    end
+
+    :ok
+  end
+
+  defp render_queue_stats do
+    case Jido.Document.Render.JobQueue.stats() do
+      stats when is_map(stats) ->
+        %{
+          queued_sessions: Map.get(stats, :queued_sessions),
+          queue_max_size: Map.get(stats, :max_queue_size)
+        }
+
+      _ ->
+        %{}
+    end
+  rescue
+    _ -> %{}
+  end
+
   defp enrich_metadata(metadata, actor, opts) do
     source = Map.get(opts, :source) || get_in(opts, [:context_options, :source]) || :agent
 
@@ -1140,6 +1347,8 @@ defmodule Jido.Document.Agent do
     context_actor = get_in(opts, [:context_options, :actor])
     top_level_actor || context_actor
   end
+
+  defp now_ms, do: System.system_time(:millisecond)
 
   defp inject_command_defaults(state, :save, params) do
     params =
