@@ -13,7 +13,7 @@ Back to index: [README](./README.md)
 - Sensitive data handling must be policy-driven.
 - Production readiness requires observability and graceful degradation.
 
-[ ] 7 Phase 7 - Governance, Security, and Operational Reliability  
+[x] 7 Phase 7 - Governance, Security, and Operational Reliability  
 Description: Harden the system with policy controls, auditable behavior, and resilience safeguards.
 
  [x] 7.1 Section - Access Control and Workspace Safety  
@@ -100,23 +100,23 @@ Description: Harden the system with policy controls, auditable behavior, and res
    [x] 7.4.2.3 Subtask - Define degraded mode behavior contract.  
    Description: Prioritize edit/save reliability over non-critical features.
 
- [ ] 7.5 Section - Phase 7 Integration Tests  
+ [x] 7.5 Section - Phase 7 Integration Tests  
  Description: Validate policy enforcement, traceability, and resilience under stress.
 
-  [ ] 7.5.1 Task - Security and policy integration tests  
+  [x] 7.5.1 Task - Security and policy integration tests  
   Description: Verify unauthorized access and unsafe operations are consistently blocked.
-   [ ] 7.5.1.1 Subtask - Test path traversal and symlink escape attempts.  
+   [x] 7.5.1.1 Subtask - Test path traversal and symlink escape attempts.  
    Description: Confirm policy rejection and audit emission.
-   [ ] 7.5.1.2 Subtask - Test role-based authorization matrix scenarios.  
+   [x] 7.5.1.2 Subtask - Test role-based authorization matrix scenarios.  
    Description: Confirm allow/deny behavior by operation type.
-   [ ] 7.5.1.3 Subtask - Test sensitive content detection and masking.  
+   [x] 7.5.1.3 Subtask - Test sensitive content detection and masking.  
    Description: Validate policy behavior across preview and save flows.
 
-  [ ] 7.5.2 Task - Reliability and observability integration tests  
+  [x] 7.5.2 Task - Reliability and observability integration tests  
   Description: Validate instrumentation and graceful degradation under failures.
-   [ ] 7.5.2.1 Subtask - Inject renderer/parser failure bursts.  
+   [x] 7.5.2.1 Subtask - Inject renderer/parser failure bursts.  
    Description: Confirm circuit breaker and degraded mode activation.
-   [ ] 7.5.2.2 Subtask - Inject transport instability across adapters.  
+   [x] 7.5.2.2 Subtask - Inject transport instability across adapters.  
    Description: Confirm reconnect behavior and session continuity.
-   [ ] 7.5.2.3 Subtask - Validate audit and metrics completeness.  
+   [x] 7.5.2.3 Subtask - Validate audit and metrics completeness.  
    Description: Ensure incidents are diagnosable from emitted data.
