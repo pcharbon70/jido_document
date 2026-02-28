@@ -37,25 +37,25 @@ Description: Harden the system with policy controls, auditable behavior, and res
    [x] 7.1.2.3 Subtask - Emit authorization deny events.  
    Description: Provide traceable diagnostics and audit signals.
 
- [ ] 7.2 Section - Auditability and Provenance  
+ [x] 7.2 Section - Auditability and Provenance  
  Description: Provide complete traceability for state transitions and failures.
 
-  [ ] 7.2.1 Task - Implement structured audit event logging  
+  [x] 7.2.1 Task - Implement structured audit event logging  
   Description: Capture who did what, when, and with which outcome.
-   [ ] 7.2.1.1 Subtask - Define audit event schema for load/update/save/render/authorize.  
+   [x] 7.2.1.1 Subtask - Define audit event schema for load/update/save/render/authorize.  
    Description: Standardize event payloads for downstream analysis.
-   [ ] 7.2.1.2 Subtask - Add correlation IDs across action and signal chains.  
+   [x] 7.2.1.2 Subtask - Add correlation IDs across action and signal chains.  
    Description: Enable end-to-end event reconstruction.
-   [ ] 7.2.1.3 Subtask - Add pluggable audit sinks.  
+   [x] 7.2.1.3 Subtask - Add pluggable audit sinks.  
    Description: Support local logs, telemetry pipelines, and external systems.
 
-  [ ] 7.2.2 Task - Implement provenance tracing for document changes  
+  [x] 7.2.2 Task - Implement provenance tracing for document changes  
   Description: Link persisted output to edit history and source operations.
-   [ ] 7.2.2.1 Subtask - Attach operation lineage to revisions.  
+   [x] 7.2.2.1 Subtask - Attach operation lineage to revisions.  
    Description: Preserve causality between edits and saved state.
-   [ ] 7.2.2.2 Subtask - Include source annotations in change records.  
+   [x] 7.2.2.2 Subtask - Include source annotations in change records.  
    Description: Distinguish updates from API, automation, and background processes.
-   [ ] 7.2.2.3 Subtask - Provide trace export helper for incident debugging.  
+   [x] 7.2.2.3 Subtask - Provide trace export helper for incident debugging.  
    Description: Support compact reproducible incident bundles.
 
  [ ] 7.3 Section - Data Safety and Redaction Policy  

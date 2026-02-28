@@ -11,7 +11,17 @@ defmodule Jido.Document.Agent do
 
   alias Jido.Document.Action
   alias Jido.Document.Action.Result
-  alias Jido.Document.{Checkpoint, Document, Error, History, Persistence, Revision, SignalBus}
+
+  alias Jido.Document.{
+    Audit,
+    Checkpoint,
+    Document,
+    Error,
+    History,
+    Persistence,
+    Revision,
+    SignalBus
+  }
 
   @supported_actions [:load, :save, :update_frontmatter, :update_body, :render, :undo, :redo]
 
@@ -22,7 +32,8 @@ defmodule Jido.Document.Agent do
           action: action_name(),
           revision: non_neg_integer() | nil,
           timestamp: DateTime.t(),
-          correlation_id: String.t() | nil
+          correlation_id: String.t() | nil,
+          source: String.t() | nil
         }
 
   @type state :: %__MODULE__{
@@ -36,6 +47,9 @@ defmodule Jido.Document.Agent do
           checkpoint_on_edit: boolean(),
           revision_sequence: non_neg_integer(),
           latest_revision_entry: Revision.entry() | nil,
+          audit_events: [Audit.event()],
+          audit_limit: pos_integer(),
+          audit_sinks: [module() | (Audit.event() -> term())],
           preview: map() | nil,
           last_good_preview: map() | nil,
           render_fallback_active: boolean(),
@@ -55,6 +69,9 @@ defmodule Jido.Document.Agent do
             checkpoint_on_edit: true,
             revision_sequence: 0,
             latest_revision_entry: nil,
+            audit_events: [],
+            audit_limit: 500,
+            audit_sinks: [],
             preview: nil,
             last_good_preview: nil,
             render_fallback_active: false,
@@ -105,6 +122,9 @@ defmodule Jido.Document.Agent do
   @spec discard_recovery(GenServer.server()) :: Result.t()
   def discard_recovery(server), do: GenServer.call(server, :discard_recovery)
 
+  @spec export_trace(GenServer.server(), keyword()) :: map()
+  def export_trace(server, opts \\ []), do: GenServer.call(server, {:export_trace, opts})
+
   @spec list_recovery_candidates(keyword()) :: {:ok, [map()]} | {:error, Error.t()}
   def list_recovery_candidates(opts \\ []) do
     checkpoint_opts = checkpoint_opts_from(opts)
@@ -126,6 +146,8 @@ defmodule Jido.Document.Agent do
     checkpoint_opts = checkpoint_opts_from(opts)
     autosave_interval_ms = normalize_autosave_interval(Keyword.get(opts, :autosave_interval_ms))
     checkpoint_on_edit = Keyword.get(opts, :checkpoint_on_edit, true)
+    audit_limit = max(Keyword.get(opts, :audit_limit, 500), 1)
+    audit_sinks = Keyword.get(opts, :audit_sinks, [])
 
     state = %__MODULE__{
       session_id: session_id,
@@ -133,7 +155,9 @@ defmodule Jido.Document.Agent do
       history_model: History.new(limit: history_limit),
       checkpoint_opts: checkpoint_opts,
       autosave_interval_ms: autosave_interval_ms,
-      checkpoint_on_edit: checkpoint_on_edit
+      checkpoint_on_edit: checkpoint_on_edit,
+      audit_limit: audit_limit,
+      audit_sinks: audit_sinks
     }
 
     state = load_pending_checkpoint(state)
@@ -189,6 +213,13 @@ defmodule Jido.Document.Agent do
   def handle_call(:discard_recovery, _from, state) do
     {result, state} = discard_pending_checkpoint(state)
     {:reply, result, state}
+  end
+
+  def handle_call({:export_trace, opts}, _from, state) do
+    opts = normalize_map(opts)
+    limit = max(Map.get(opts, :limit, 200), 1)
+    trace = build_trace_export(state, limit)
+    {:reply, trace, state}
   end
 
   def handle_call({:command, action, params, opts}, _from, state) do
@@ -247,11 +278,13 @@ defmodule Jido.Document.Agent do
   end
 
   defp execute_action_command(state, previous_state, action, params, opts) do
+    actor = command_actor(opts)
+
     context = %{
       session_id: state.session_id,
       path: Map.get(params, :path),
       document: Map.get(params, :document, state.document),
-      actor: command_actor(opts),
+      actor: actor,
       options: Map.get(opts, :context_options, %{}),
       correlation_id: Map.get(opts, :correlation_id),
       idempotency_key: Map.get(opts, :idempotency_key),
@@ -262,11 +295,13 @@ defmodule Jido.Document.Agent do
 
     case result do
       %Result{status: :ok, value: value} = ok_result ->
-        next_state = apply_success(state, action, value, ok_result.metadata)
-        {ok_result, next_state}
+        metadata = enrich_metadata(ok_result.metadata, actor, opts)
+        next_state = apply_success(state, action, value, metadata)
+        {%{ok_result | metadata: metadata}, next_state}
 
       %Result{status: :error, error: error} = error_result ->
-        maybe_emit_authorization_denied(state, action, error, error_result.metadata)
+        metadata = enrich_metadata(error_result.metadata, actor, opts)
+        state = maybe_emit_authorization_denied(state, action, error, metadata)
 
         if action == :render do
           fallback_value = %{
@@ -276,17 +311,17 @@ defmodule Jido.Document.Agent do
           }
 
           recovered_state =
-            apply_failure(state, action, error, error_result.metadata, true)
+            apply_failure(state, action, error, metadata, true)
 
           next_state =
             apply_success(
               recovered_state,
               :render,
               fallback_value,
-              Map.put(error_result.metadata, :fallback, true)
+              Map.put(metadata, :fallback, true)
             )
 
-          {Result.ok(fallback_value, Map.put(error_result.metadata, :fallback, true)), next_state}
+          {Result.ok(fallback_value, Map.put(metadata, :fallback, true)), next_state}
         else
           rollback? = Map.get(opts, :optimistic, true)
 
@@ -298,9 +333,9 @@ defmodule Jido.Document.Agent do
             end
 
           next_state =
-            apply_failure(recovered_state, action, error, error_result.metadata, rollback?)
+            apply_failure(recovered_state, action, error, metadata, rollback?)
 
-          {error_result, next_state}
+          {%{error_result | metadata: metadata}, next_state}
         end
     end
   end
@@ -308,7 +343,10 @@ defmodule Jido.Document.Agent do
   defp execute_history_command(state, action, opts) do
     started = System.monotonic_time(:microsecond)
     correlation_id = Map.get(opts, :correlation_id, default_correlation_id())
-    metadata = history_command_metadata(action, correlation_id, opts)
+    actor = command_actor(opts)
+
+    metadata =
+      history_command_metadata(action, correlation_id, opts) |> enrich_metadata(actor, opts)
 
     cond do
       state.document == nil ->
@@ -474,10 +512,19 @@ defmodule Jido.Document.Agent do
       action: action,
       revision: current_revision(state),
       timestamp: DateTime.utc_now(),
-      correlation_id: Map.get(signal_metadata, :correlation_id)
+      correlation_id: Map.get(signal_metadata, :correlation_id),
+      source: metadata_source(signal_metadata)
     }
 
-    %{state | history: [entry | state.history]}
+    state =
+      %{state | history: [entry | state.history]}
+      |> append_audit_event(:action, action, :ok, signal_metadata, %{
+        payload: compact_payload(value),
+        lineage: lineage_for(state, action),
+        history_depth: length(state.history)
+      })
+
+    state
   end
 
   defp apply_failure(state, action, %Error{} = error, metadata, rollback?) do
@@ -490,7 +537,11 @@ defmodule Jido.Document.Agent do
         metadata: metadata
       })
 
-    state
+    append_audit_event(state, :action, action, audit_status_for_error(error), metadata, %{
+      error: Error.to_map(error),
+      rollback: rollback?,
+      lineage: lineage_for(state, action)
+    })
   end
 
   defp signal_type_for_success(:load), do: :loaded
@@ -766,7 +817,8 @@ defmodule Jido.Document.Agent do
         action: :load,
         revision: current_revision(recovered_state),
         timestamp: DateTime.utc_now(),
-        correlation_id: Map.get(metadata, :correlation_id)
+        correlation_id: Map.get(metadata, :correlation_id),
+        source: metadata_source(metadata)
       }
 
       result =
@@ -779,7 +831,15 @@ defmodule Jido.Document.Agent do
           metadata
         )
 
-      {result, %{recovered_state | history: [entry | recovered_state.history]}}
+      recovered_state =
+        recovered_state
+        |> Map.update!(:history, &[entry | &1])
+        |> append_audit_event(:action, :recover, :ok, metadata, %{
+          recovered: true,
+          lineage: lineage_for(recovered_state, :recover)
+        })
+
+      {result, recovered_state}
     else
       {:error, %Error{} = error} ->
         metadata = finish_op_metadata(metadata, started)
@@ -804,7 +864,11 @@ defmodule Jido.Document.Agent do
             metadata: metadata
           })
 
-        {Result.ok(%{discarded: true}, metadata), %{state | pending_checkpoint: nil}}
+        state =
+          %{state | pending_checkpoint: nil}
+          |> append_audit_event(:action, :discard_recovery, :ok, metadata, %{discarded: true})
+
+        {Result.ok(%{discarded: true}, metadata), state}
 
       {:error, %Error{} = error} ->
         metadata = finish_op_metadata(metadata, started)
@@ -926,10 +990,13 @@ defmodule Jido.Document.Agent do
         metadata: metadata
       })
 
-    :ok
+    append_audit_event(state, :authorize, action, :denied, metadata, %{
+      error: Error.to_map(error),
+      actor: actor
+    })
   end
 
-  defp maybe_emit_authorization_denied(_state, _action, _error, _metadata), do: :ok
+  defp maybe_emit_authorization_denied(state, _action, _error, _metadata), do: state
 
   defp bump_revision_sequence(state, action, metadata) do
     attrs = %{
@@ -938,7 +1005,9 @@ defmodule Jido.Document.Agent do
       correlation_id: Map.get(metadata, :correlation_id),
       metadata: %{
         idempotency: Map.get(metadata, :idempotency),
-        idempotency_key: Map.get(metadata, :idempotency_key)
+        idempotency_key: Map.get(metadata, :idempotency_key),
+        actor: Map.get(metadata, :actor),
+        lineage: lineage_for(state, action)
       }
     }
 
@@ -961,6 +1030,95 @@ defmodule Jido.Document.Agent do
       actor: "session:" <> state.session_id,
       generated_at: DateTime.utc_now()
     }
+  end
+
+  defp append_audit_event(state, event_type, action, status, metadata, payload) do
+    attrs = %{
+      event_type: event_type,
+      action: action,
+      status: status,
+      session_id: state.session_id,
+      correlation_id: Map.get(metadata, :correlation_id),
+      actor: Map.get(metadata, :actor),
+      source: metadata_source(metadata),
+      revision_id: revision_id_from_metadata(metadata),
+      document_revision: current_revision(state),
+      metadata: payload
+    }
+
+    case Audit.build(attrs) do
+      {:ok, event} ->
+        _ = Audit.dispatch(event, state.audit_sinks)
+        events = [event | state.audit_events] |> Enum.take(state.audit_limit)
+        %{state | audit_events: events}
+
+      {:error, _error} ->
+        state
+    end
+  end
+
+  defp metadata_source(metadata) do
+    case Map.get(metadata, :source) do
+      source when is_binary(source) and source != "" ->
+        source
+
+      source when is_atom(source) ->
+        Atom.to_string(source)
+
+      _ ->
+        actor = Map.get(metadata, :actor)
+        actor_id = actor_id(actor)
+        if is_binary(actor_id) and actor_id != "", do: "actor:" <> actor_id, else: "agent"
+    end
+  end
+
+  defp actor_id(actor) when is_map(actor), do: Map.get(actor, :id) || Map.get(actor, "id")
+  defp actor_id(_), do: nil
+
+  defp revision_id_from_metadata(metadata) do
+    case Map.get(metadata, :revision_entry) do
+      %{revision_id: revision_id} -> revision_id
+      _ -> nil
+    end
+  end
+
+  defp lineage_for(state, action) do
+    current_sequence = state.revision_sequence
+
+    %{
+      action: action,
+      current_sequence: current_sequence,
+      parent_revision_id: parent_revision_id(state.session_id, current_sequence),
+      recent_actions:
+        state.history
+        |> Enum.take(5)
+        |> Enum.map(&Map.take(&1, [:action, :revision, :source, :correlation_id]))
+    }
+  end
+
+  defp parent_revision_id(_session_id, sequence) when sequence <= 1, do: nil
+  defp parent_revision_id(session_id, sequence), do: "#{session_id}-#{sequence - 1}"
+
+  defp audit_status_for_error(%Error{code: :forbidden}), do: :denied
+  defp audit_status_for_error(_), do: :error
+
+  defp build_trace_export(state, limit) do
+    %{
+      session_id: state.session_id,
+      document_path: state.document && state.document.path,
+      current_revision: current_revision(state),
+      latest_revision_entry: state.latest_revision_entry,
+      history: state.history |> Enum.take(limit),
+      audit_events: state.audit_events |> Enum.take(limit)
+    }
+  end
+
+  defp enrich_metadata(metadata, actor, opts) do
+    source = Map.get(opts, :source) || get_in(opts, [:context_options, :source]) || :agent
+
+    metadata
+    |> maybe_put(:actor, actor)
+    |> maybe_put(:source, source)
   end
 
   defp normalize_map(%{} = map), do: map
