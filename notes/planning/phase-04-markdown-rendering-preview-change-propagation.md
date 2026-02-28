@@ -13,7 +13,7 @@ Back to index: [README](./README.md)
 - Preview rendering is asynchronous with debounce.
 - Renderer output includes diagnostics and table-of-contents data.
 
-[ ] 4 Phase 4 - Markdown Rendering, Preview, and Change Propagation  
+[x] 4 Phase 4 - Markdown Rendering, Preview, and Change Propagation  
 Description: Deliver high-quality markdown rendering with performant, reliable preview update behavior.
 
  [x] 4.1 Section - Renderer Pipeline Foundation  
@@ -100,23 +100,23 @@ Description: Deliver high-quality markdown rendering with performant, reliable p
    [x] 4.4.2.3 Subtask - Add plugin compatibility checks at startup.  
    Description: Fail fast with diagnostics when plugin contracts mismatch.
 
- [ ] 4.5 Section - Phase 4 Integration Tests  
+ [x] 4.5 Section - Phase 4 Integration Tests  
  Description: Validate rendering quality, performance behavior, and fallback reliability.
 
-  [ ] 4.5.1 Task - Rendering pipeline integration tests  
+  [x] 4.5.1 Task - Rendering pipeline integration tests  
   Description: Verify renderer output and diagnostics across markdown feature sets.
-   [ ] 4.5.1.1 Subtask - Test headings, links, lists, tables, and code blocks.  
+   [x] 4.5.1.1 Subtask - Test headings, links, lists, tables, and code blocks.  
    Description: Confirm expected HTML and TOC output.
-   [ ] 4.5.1.2 Subtask - Test malformed markdown diagnostics.  
+   [x] 4.5.1.2 Subtask - Test malformed markdown diagnostics.  
    Description: Ensure warnings and errors are emitted consistently.
-   [ ] 4.5.1.3 Subtask - Test deterministic output for identical input.  
+   [x] 4.5.1.3 Subtask - Test deterministic output for identical input.  
    Description: Guarantee stable previews and cache keys.
 
-  [ ] 4.5.2 Task - Scheduling and fallback integration tests  
+  [x] 4.5.2 Task - Scheduling and fallback integration tests  
   Description: Validate responsive behavior under rapid edit streams and failures.
-   [ ] 4.5.2.1 Subtask - Simulate bursty updates with queue saturation.  
+   [x] 4.5.2.1 Subtask - Simulate bursty updates with queue saturation.  
    Description: Ensure stale jobs are canceled and latest preview wins.
-   [ ] 4.5.2.2 Subtask - Simulate renderer failure and fallback activation.  
+   [x] 4.5.2.2 Subtask - Simulate renderer failure and fallback activation.  
    Description: Confirm last good preview remains available.
-   [ ] 4.5.2.3 Subtask - Simulate recovery from fallback mode.  
+   [x] 4.5.2.3 Subtask - Simulate recovery from fallback mode.  
    Description: Ensure normal rendering resumes without restart.
