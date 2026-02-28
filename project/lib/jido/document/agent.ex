@@ -25,6 +25,7 @@ defmodule Jido.Document.Agent do
   @type state :: %__MODULE__{
           session_id: String.t(),
           document: Document.t() | nil,
+          disk_snapshot: map() | nil,
           preview: map() | nil,
           last_good_preview: map() | nil,
           render_fallback_active: boolean(),
@@ -36,6 +37,7 @@ defmodule Jido.Document.Agent do
 
   defstruct session_id: nil,
             document: nil,
+            disk_snapshot: nil,
             preview: nil,
             last_good_preview: nil,
             render_fallback_active: false,
@@ -145,6 +147,7 @@ defmodule Jido.Document.Agent do
   defp execute_command(state, action, params, opts) do
     params = normalize_map(params)
     opts = normalize_map(opts)
+    params = inject_command_defaults(state, action, params)
 
     with :ok <- guard_action(state, action) do
       previous_state = state
@@ -247,13 +250,18 @@ defmodule Jido.Document.Agent do
           %{
             state
             | document: Map.get(value, :document),
+              disk_snapshot: Map.get(value, :disk_snapshot),
               preview: nil,
               last_good_preview: nil,
               render_fallback_active: false
           }
 
         :save ->
-          %{state | document: Map.get(value, :document, state.document)}
+          %{
+            state
+            | document: Map.get(value, :document, state.document),
+              disk_snapshot: Map.get(value, :disk_snapshot, state.disk_snapshot)
+          }
 
         :update_frontmatter ->
           %{state | document: Map.get(value, :document, state.document)}
@@ -414,6 +422,16 @@ defmodule Jido.Document.Agent do
   defp normalize_map(%{} = map), do: map
   defp normalize_map(list) when is_list(list), do: Map.new(list)
   defp normalize_map(_), do: %{}
+
+  defp inject_command_defaults(state, :save, params) do
+    if Map.has_key?(params, :baseline) do
+      params
+    else
+      Map.put(params, :baseline, state.disk_snapshot)
+    end
+  end
+
+  defp inject_command_defaults(_state, _action, params), do: params
 
   defp default_session_id do
     "session-" <> Integer.to_string(System.unique_integer([:positive]))

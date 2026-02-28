@@ -16,25 +16,25 @@ Back to index: [README](./README.md)
 [ ] 6 Phase 6 - Persistence, History, Versioning, and Recovery  
 Description: Deliver durable persistence semantics, coherent edit history, and robust crash recovery.
 
- [ ] 6.1 Section - Save Semantics and Filesystem Safety  
+ [x] 6.1 Section - Save Semantics and Filesystem Safety  
  Description: Implement reliable write behavior and external mutation protection.
 
-  [ ] 6.1.1 Task - Implement atomic save pipeline  
+  [x] 6.1.1 Task - Implement atomic save pipeline  
   Description: Ensure writes are durable and rollback-safe across failures.
-   [ ] 6.1.1.1 Subtask - Write serialized output to temp file with fsync.  
+   [x] 6.1.1.1 Subtask - Write serialized output to temp file with fsync.  
    Description: Guarantee data durability before final rename.
-   [ ] 6.1.1.2 Subtask - Rename temp file atomically to target path.  
+   [x] 6.1.1.2 Subtask - Rename temp file atomically to target path.  
    Description: Prevent partially-written target files.
-   [ ] 6.1.1.3 Subtask - Preserve file mode/ownership metadata when possible.  
+   [x] 6.1.1.3 Subtask - Preserve file mode/ownership metadata when possible.  
    Description: Avoid permission regressions on save.
 
-  [ ] 6.1.2 Task - Implement on-disk divergence detection  
+  [x] 6.1.2 Task - Implement on-disk divergence detection  
   Description: Detect and handle external file edits before save.
-   [ ] 6.1.2.1 Subtask - Track baseline hash and mtime per session load.  
+   [x] 6.1.2.1 Subtask - Track baseline hash and mtime per session load.  
    Description: Compare state before committing writes.
-   [ ] 6.1.2.2 Subtask - Block unsafe overwrite when divergence detected.  
+   [x] 6.1.2.2 Subtask - Block unsafe overwrite when divergence detected.  
    Description: Return explicit conflict reason and remediation options.
-   [ ] 6.1.2.3 Subtask - Add merge strategy hook points.  
+   [x] 6.1.2.3 Subtask - Add merge strategy hook points.  
    Description: Allow custom conflict handlers by integration policy.
 
  [ ] 6.2 Section - Undo/Redo History Model  
