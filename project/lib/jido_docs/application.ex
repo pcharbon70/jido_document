@@ -11,7 +11,12 @@ defmodule JidoDocs.Application do
     children = [
       {JidoDocs.Render.Metrics, name: JidoDocs.Render.Metrics},
       {JidoDocs.Render.JobQueue, name: JidoDocs.Render.JobQueue},
-      {JidoDocs.SignalBus, name: JidoDocs.SignalBus}
+      {JidoDocs.SignalBus, name: JidoDocs.SignalBus},
+      {JidoDocs.SessionSupervisor, name: JidoDocs.SessionSupervisor},
+      {JidoDocs.SessionRegistry,
+       name: JidoDocs.SessionRegistry,
+       session_supervisor: JidoDocs.SessionSupervisor,
+       signal_bus: JidoDocs.SignalBus}
     ]
 
     opts = [strategy: :one_for_one, name: JidoDocs.Supervisor]

@@ -16,25 +16,25 @@ Back to index: [README](./README.md)
 [ ] 5 Phase 5 - Interface Adapters and Session Coordination  
 Description: Connect LiveView, TUI, and Desktop clients to shared session agents with deterministic synchronization.
 
- [ ] 5.1 Section - Session Registry and Ownership Model  
+ [x] 5.1 Section - Session Registry and Ownership Model  
  Description: Implement process discovery, ownership, and concurrent client coordination.
 
-  [ ] 5.1.1 Task - Implement session registry and lookup APIs  
+  [x] 5.1.1 Task - Implement session registry and lookup APIs  
   Description: Provide robust create/get/list lifecycle for session processes.
-   [ ] 5.1.1.1 Subtask - Add stable session ID generation strategy.  
+   [x] 5.1.1.1 Subtask - Add stable session ID generation strategy.  
    Description: Ensure deterministic mapping for file-backed sessions.
-   [ ] 5.1.1.2 Subtask - Support explicit and lazy session creation.  
+   [x] 5.1.1.2 Subtask - Support explicit and lazy session creation.  
    Description: Create sessions on demand with default or provided config.
-   [ ] 5.1.1.3 Subtask - Add stale session cleanup policies.  
+   [x] 5.1.1.3 Subtask - Add stale session cleanup policies.  
    Description: Reclaim idle processes safely.
 
-  [ ] 5.1.2 Task - Implement ownership and locking semantics  
+  [x] 5.1.2 Task - Implement ownership and locking semantics  
   Description: Avoid conflicting write operations across adapters.
-   [ ] 5.1.2.1 Subtask - Add optimistic lock token support.  
+   [x] 5.1.2.1 Subtask - Add optimistic lock token support.  
    Description: Detect stale client writes deterministically.
-   [ ] 5.1.2.2 Subtask - Add lock conflict response contract.  
+   [x] 5.1.2.2 Subtask - Add lock conflict response contract.  
    Description: Provide actionable conflict diagnostics to adapters.
-   [ ] 5.1.2.3 Subtask - Add administrative takeover path.  
+   [x] 5.1.2.3 Subtask - Add administrative takeover path.  
    Description: Allow controlled override for stuck sessions.
 
  [ ] 5.2 Section - LiveView Adapter  
