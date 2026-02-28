@@ -37,25 +37,25 @@ Description: Establish project skeleton, compile-safe module boundaries, and det
    [x] 1.1.2.3 Subtask - Add startup diagnostics hooks.  
    Description: Emit telemetry events on boot and key init steps.
 
- [ ] 1.2 Section - Dependency and Compatibility Contracts  
+ [x] 1.2 Section - Dependency and Compatibility Contracts  
  Description: Stabilize dependency expectations and avoid accidental API drift.
 
-  [ ] 1.2.1 Task - Define dependency matrix and minimum supported versions  
+  [x] 1.2.1 Task - Define dependency matrix and minimum supported versions  
   Description: Lock compatibility for `jido`, `jido_action`, `jido_signal`, and `mdex`.
-   [ ] 1.2.1.1 Subtask - Pin baseline versions and rationale.  
+   [x] 1.2.1.1 Subtask - Pin baseline versions and rationale.  
    Description: Record why each version floor is required.
-   [ ] 1.2.1.2 Subtask - Declare optional parsing dependencies (`YamlElixir`, TOML parser).  
+   [x] 1.2.1.2 Subtask - Declare optional parsing dependencies (`YamlElixir`, TOML parser).  
    Description: Support explicit adapter fallback strategy.
-   [ ] 1.2.1.3 Subtask - Add compile-time compatibility checks.  
+   [x] 1.2.1.3 Subtask - Add compile-time compatibility checks.  
    Description: Fail fast when required functions/features are unavailable.
 
-  [ ] 1.2.2 Task - Implement external library adapter boundaries  
+  [x] 1.2.2 Task - Implement external library adapter boundaries  
   Description: Keep external APIs behind internal wrappers for maintainability.
-   [ ] 1.2.2.1 Subtask - Add frontmatter parser adapter behavior.  
+   [x] 1.2.2.1 Subtask - Add frontmatter parser adapter behavior.  
    Description: Allow swapping YAML/TOML implementation without call-site changes.
-   [ ] 1.2.2.2 Subtask - Add markdown renderer adapter behavior.  
+   [x] 1.2.2.2 Subtask - Add markdown renderer adapter behavior.  
    Description: Decouple render pipeline from direct `Mdex` calls.
-   [ ] 1.2.2.3 Subtask - Normalize external errors into domain errors.  
+   [x] 1.2.2.3 Subtask - Normalize external errors into domain errors.  
    Description: Return stable reason codes regardless of upstream library format.
 
  [ ] 1.3 Section - Runtime Configuration and Environment Profiles  
