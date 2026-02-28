@@ -130,8 +130,10 @@ defmodule JidoDocs.SessionRegistry do
 
   @impl true
   def handle_call({:ensure_session, session_id, opts}, _from, state) do
+    path = Keyword.get(opts, :path)
+
     with :ok <- validate_session_id(session_id),
-         {:ok, state, info} <- ensure_started(state, session_id, nil, opts) do
+         {:ok, state, info} <- ensure_started(state, session_id, path, opts) do
       {:reply, {:ok, info}, state}
     else
       {:error, %Error{} = error} -> {:reply, {:error, error}, state}

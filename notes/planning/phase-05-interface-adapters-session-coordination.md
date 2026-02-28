@@ -79,25 +79,25 @@ Description: Connect LiveView, TUI, and Desktop clients to shared session agents
    [x] 5.3.2.3 Subtask - Add disconnect/reconnect handling.  
    Description: Recover session linkage without data loss.
 
- [ ] 5.4 Section - Desktop Adapter  
+ [x] 5.4 Section - Desktop Adapter  
  Description: Expose robust IPC integration for desktop clients.
 
-  [ ] 5.4.1 Task - Implement desktop IPC command and event contracts  
+  [x] 5.4.1 Task - Implement desktop IPC command and event contracts  
   Description: Define stable transport payloads for session operations.
-   [ ] 5.4.1.1 Subtask - Define IPC message schemas for action requests.  
+   [x] 5.4.1.1 Subtask - Define IPC message schemas for action requests.  
    Description: Standardize serialization and validation at boundaries.
-   [ ] 5.4.1.2 Subtask - Define event channel payloads for signals.  
+   [x] 5.4.1.2 Subtask - Define event channel payloads for signals.  
    Description: Broadcast updates and diagnostics with revision metadata.
-   [ ] 5.4.1.3 Subtask - Add reconnect and replay strategy.  
+   [x] 5.4.1.3 Subtask - Add reconnect and replay strategy.  
    Description: Restore client state after process or transport interruption.
 
-  [ ] 5.4.2 Task - Implement multi-window coordination behavior  
+  [x] 5.4.2 Task - Implement multi-window coordination behavior  
   Description: Ensure predictable state sharing across desktop windows.
-   [ ] 5.4.2.1 Subtask - Support shared-session and isolated-session modes.  
+   [x] 5.4.2.1 Subtask - Support shared-session and isolated-session modes.  
    Description: Allow per-window configuration for collaboration style.
-   [ ] 5.4.2.2 Subtask - Broadcast lock/ownership changes across windows.  
+   [x] 5.4.2.2 Subtask - Broadcast lock/ownership changes across windows.  
    Description: Keep write permissions visible and synchronized.
-   [ ] 5.4.2.3 Subtask - Prompt conflict resolution on simultaneous edits.  
+   [x] 5.4.2.3 Subtask - Prompt conflict resolution on simultaneous edits.  
    Description: Prevent silent overwrite in multi-window scenarios.
 
  [ ] 5.5 Section - Phase 5 Integration Tests  
