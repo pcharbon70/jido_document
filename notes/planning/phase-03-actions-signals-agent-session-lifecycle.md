@@ -19,25 +19,25 @@ Back to index: [README](./README.md)
 [ ] 3 Phase 3 - Actions, Signals, and Agent Session Lifecycle  
 Description: Build atomic operation verbs, stable event contracts, and reliable session orchestration.
 
- [ ] 3.1 Section - Action Contracts and Error Taxonomy  
+ [x] 3.1 Section - Action Contracts and Error Taxonomy  
  Description: Define consistent action input/output and failure semantics.
 
-  [ ] 3.1.1 Task - Standardize action behavior contract  
+  [x] 3.1.1 Task - Standardize action behavior contract  
   Description: Ensure all actions follow a predictable callable shape and metadata model.
-   [ ] 3.1.1.1 Subtask - Define input schema pattern for actions.  
+   [x] 3.1.1.1 Subtask - Define input schema pattern for actions.  
    Description: Include `session_id`, `path`, `document`, and request-scoped options.
-   [ ] 3.1.1.2 Subtask - Define return contract and telemetry fields.  
+   [x] 3.1.1.2 Subtask - Define return contract and telemetry fields.  
    Description: Include correlation IDs and durations for each action call.
-   [ ] 3.1.1.3 Subtask - Define idempotency expectations by action type.  
+   [x] 3.1.1.3 Subtask - Define idempotency expectations by action type.  
    Description: Clarify safe retry behavior for load/save/render operations.
 
-  [ ] 3.1.2 Task - Implement domain error taxonomy  
+  [x] 3.1.2 Task - Implement domain error taxonomy  
   Description: Normalize parser, validation, filesystem, and render failures.
-   [ ] 3.1.2.1 Subtask - Define canonical reason codes.  
+   [x] 3.1.2.1 Subtask - Define canonical reason codes.  
    Description: Map failures to stable machine-readable atoms.
-   [ ] 3.1.2.2 Subtask - Attach human-readable diagnostics.  
+   [x] 3.1.2.2 Subtask - Attach human-readable diagnostics.  
    Description: Include context that adapters can display directly.
-   [ ] 3.1.2.3 Subtask - Build error conversion helpers.  
+   [x] 3.1.2.3 Subtask - Build error conversion helpers.  
    Description: Translate upstream exceptions into domain errors.
 
  [ ] 3.2 Section - Core Document Actions  
