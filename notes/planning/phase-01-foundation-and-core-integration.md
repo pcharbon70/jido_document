@@ -16,25 +16,25 @@ Back to index: [README](./README.md)
 [ ] 1 Phase 1 - Foundation and Core Integration  
 Description: Establish project skeleton, compile-safe module boundaries, and deterministic runtime contracts.
 
- [ ] 1.1 Section - Repository and Application Bootstrap  
+ [x] 1.1 Section - Repository and Application Bootstrap  
  Description: Create an implementation-ready module and supervision layout.
 
-  [ ] 1.1.1 Task - Establish namespace and ownership boundaries  
+  [x] 1.1.1 Task - Establish namespace and ownership boundaries  
   Description: Define which modules own parsing, rendering, actions, and session state.
-   [ ] 1.1.1.1 Subtask - Create top-level modules (`JidoDocs`, `JidoDocs.Document`, `JidoDocs.Agent`, `JidoDocs.Config`).  
+   [x] 1.1.1.1 Subtask - Create top-level modules (`JidoDocs`, `JidoDocs.Document`, `JidoDocs.Agent`, `JidoDocs.Config`).  
    Description: Ensure compile-ready stubs with `@moduledoc` and types.
-   [ ] 1.1.1.2 Subtask - Define boundary modules for `actions/`, `schema/`, `renderer/`, and `transport/`.  
+   [x] 1.1.1.2 Subtask - Define boundary modules for `actions/`, `schema/`, `renderer/`, and `transport/`.  
    Description: Prevent cross-layer coupling early.
-   [ ] 1.1.1.3 Subtask - Document ownership rules per module namespace.  
+   [x] 1.1.1.3 Subtask - Document ownership rules per module namespace.  
    Description: Clarify write responsibilities for future contributors.
 
-  [ ] 1.1.2 Task - Wire OTP application and supervision entrypoints  
+  [x] 1.1.2 Task - Wire OTP application and supervision entrypoints  
   Description: Ensure startup, shutdown, and supervision behavior are explicit.
-   [ ] 1.1.2.1 Subtask - Add application config and supervision tree skeleton.  
+   [x] 1.1.2.1 Subtask - Add application config and supervision tree skeleton.  
    Description: Include session registry and background worker placeholders.
-   [ ] 1.1.2.2 Subtask - Define child restart strategies.  
+   [x] 1.1.2.2 Subtask - Define child restart strategies.  
    Description: Use strategy choices that isolate failing sessions.
-   [ ] 1.1.2.3 Subtask - Add startup diagnostics hooks.  
+   [x] 1.1.2.3 Subtask - Add startup diagnostics hooks.  
    Description: Emit telemetry events on boot and key init steps.
 
  [ ] 1.2 Section - Dependency and Compatibility Contracts  
