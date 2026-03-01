@@ -5,7 +5,7 @@ This guide focuses on preview generation and render diagnostics.
 ## Components in this guide
 
 - `Jido.Document.Renderer`
-- `Jido.Document.Actions.Render` (via `Agent.command/4`)
+- `Jido.Document.Actions.Render` (via `Jido.Document.Agent.command/4`)
 
 ## 1. Render directly from markdown
 

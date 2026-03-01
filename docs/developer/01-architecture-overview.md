@@ -55,7 +55,7 @@ flowchart LR
 ## Canonical flow
 
 1. Caller resolves/starts a session.
-2. Caller sends action commands through `Agent.command/4`.
+2. Caller sends action commands through `Jido.Document.Agent.command/4`.
 3. Agent executes one action module with a normalized context.
 4. Agent updates session state, history, revision, and audit metadata.
 5. Agent emits session-scoped signals for subscribers.
@@ -68,4 +68,3 @@ flowchart LR
 - Save is guarded by baseline snapshots to avoid silent overwrite.
 - Signal payloads are versioned and bounded.
 - Recovery is explicit (checkpoint discovery, recover, discard).
-

@@ -44,8 +44,8 @@ end
 
 Other recovery utilities:
 
-- `Agent.discard_recovery/1`
-- `Agent.list_recovery_candidates/1`
+- `Jido.Document.Agent.discard_recovery/1`
+- `Jido.Document.Agent.list_recovery_candidates/1`
 
 ## 3. Save divergence protection
 
@@ -82,4 +82,3 @@ If high-severity findings are unapproved, save is blocked.
 ## Next
 
 Continue with [08 - Schema Validation and Migration](./08-schema-validation-and-migration.md).
-
