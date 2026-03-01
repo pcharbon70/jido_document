@@ -1,6 +1,6 @@
 # 02 - Supervision and Runtime Topology
 
-`Jido.Document.Application` defines a small supervision tree with clear
+The application entrypoint (`lib/jido/document/application.ex`) defines a small supervision tree with clear
 separation between shared runtime services and dynamic session processes.
 
 ## Topology
@@ -48,4 +48,3 @@ checks (`PluginManager.startup_check/2`) and logs compatibility diagnostics.
 - `one_for_one` supervision isolates process crashes.
 - Session failures do not inherently crash sibling sessions.
 - Registry and signal bus are shared services and should remain lightweight.
-
