@@ -33,6 +33,8 @@ end
 - Minimal sample: `mix run examples/minimal_api_sample.exs`
 - Session concurrency sample: `mix run examples/session_concurrency_sample.exs`
 - Crash recovery sample: `mix run examples/crash_recovery_sample.exs`
+- `jido_skill` format sample: `examples/skill_format_example.md`
+- `jido_command` format sample: `examples/command_format_example.md`
 
 ## API Contract Snapshot
 
