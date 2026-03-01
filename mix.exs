@@ -76,9 +76,13 @@ defmodule JidoDocument.MixProject do
 
   defp docs do
     [
-      main: "readme",
+      main: "Jido.Document",
       source_ref: "v#{@version}",
       source_url: "https://github.com/pcharbon70/jido_document",
+      groups_for_extras: [
+        "User Guides": ~r"docs/user/.*\\.md",
+        "Developer Guides": ~r"docs/developer/.*\\.md"
+      ],
       extras: [
         "README.md",
         "docs/public-api.md",

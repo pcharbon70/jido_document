@@ -38,8 +38,8 @@ flowchart TD
 ## Plugin model
 
 - Contract:
-  - `Jido.Document.Render.Plugin.transform/2`
-  - `Jido.Document.Render.Plugin.compatible?/1`
+  - `c:Jido.Document.Render.Plugin.transform/2`
+  - `c:Jido.Document.Render.Plugin.compatible?/1`
 - Manager behavior:
   - ordered execution by priority
   - startup compatibility checks
@@ -55,4 +55,3 @@ Render output includes:
 - `cache_key`
 - `adapter`
 - `metadata` (extensions, syntax highlight settings, plugin list, etc.)
-
