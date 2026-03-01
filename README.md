@@ -21,6 +21,8 @@ end
 
 ## Guides and Examples
 
+- User guide track (numbered by complexity): [`docs/user/README.md`](./docs/user/README.md)
+- Developer guide track (numbered by architecture depth): [`docs/developer/README.md`](./docs/developer/README.md)
 - Quickstart: [`docs/quickstart.md`](./docs/quickstart.md)
 - Integration boundaries: [`docs/integration-boundaries.md`](./docs/integration-boundaries.md)
 - Troubleshooting: [`docs/troubleshooting.md`](./docs/troubleshooting.md)
