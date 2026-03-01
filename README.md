@@ -21,6 +21,8 @@ end
 
 ## Guides and Examples
 
+- User guide track (numbered by complexity): [`docs/user/README.md`](./docs/user/README.md)
+- Developer guide track (numbered by architecture depth): [`docs/developer/README.md`](./docs/developer/README.md)
 - Quickstart: [`docs/quickstart.md`](./docs/quickstart.md)
 - Integration boundaries: [`docs/integration-boundaries.md`](./docs/integration-boundaries.md)
 - Troubleshooting: [`docs/troubleshooting.md`](./docs/troubleshooting.md)
@@ -33,6 +35,8 @@ end
 - Minimal sample: `mix run examples/minimal_api_sample.exs`
 - Session concurrency sample: `mix run examples/session_concurrency_sample.exs`
 - Crash recovery sample: `mix run examples/crash_recovery_sample.exs`
+- `jido_skill` format sample: `examples/skill_format_example.md`
+- `jido_command` format sample: `examples/command_format_example.md`
 
 ## API Contract Snapshot
 
